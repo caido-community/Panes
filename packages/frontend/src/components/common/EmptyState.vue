@@ -1,13 +1,9 @@
 <script setup lang="ts">
-interface Props {
-  icon?: string;
+const { icon = "fas fa-inbox", message = "" } = defineProps<{
   title: string;
+  icon?: string;
   message?: string;
-}
-
-withDefaults(defineProps<Props>(), {
-  icon: "fas fa-inbox",
-});
+}>();
 </script>
 
 <template>

@@ -6,10 +6,8 @@ import Card from "primevue/card";
   <div class="h-full flex flex-col gap-1">
     <Card
       class="h-fit"
-      :pt="{
-        body: { class: 'h-fit p-0 flex flex-col' },
-        content: { class: 'h-fit flex flex-col' },
-      }"
+      pt:body:class="h-fit p-0 flex flex-col"
+      pt:content:class="h-fit flex flex-col"
     >
       <template #header>
         <div class="p-4">
@@ -23,10 +21,8 @@ import Card from "primevue/card";
 
     <Card
       class="flex-1 min-h-0"
-      :pt="{
-        body: { class: 'h-full p-0 flex flex-col' },
-        content: { class: 'h-full flex flex-col p-4' },
-      }"
+      pt:body:class="h-full p-0 flex flex-col"
+      pt:content:class="h-full flex flex-col p-4"
     >
       <template #content>
         <div class="flex items-center justify-center h-full text-gray-400">
