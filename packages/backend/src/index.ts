@@ -1,17 +1,26 @@
 import type { DefineAPI, SDK } from "caido:plugin";
 
-const generateRandomString = (sdk: SDK, length: number) => {
-  const randomString = Math.random()
-    .toString(36)
-    .substring(2, length + 2);
-  sdk.console.log(`Generating random string: ${randomString}`);
-  return randomString;
+// Placeholder functions for Phase 2
+const getPanes = async (sdk: SDK) => {
+  sdk.console.log("getPanes called - will be implemented in Phase 2");
+  return { kind: "Success" as const, value: [] };
 };
 
 export type API = DefineAPI<{
-  generateRandomString: typeof generateRandomString;
+  getPanes: typeof getPanes;
 }>;
 
-export function init(sdk: SDK<API>) {
-  sdk.api.register("generateRandomString", generateRandomString);
+export type BackendEvents = {
+  "pane:created": (paneId: string) => void;
+  "pane:updated": (paneId: string) => void;
+  "pane:deleted": (paneId: string) => void;
+};
+
+export function init(sdk: SDK<API, BackendEvents>) {
+  sdk.console.log("Panes plugin backend initialized");
+  
+  // Register API endpoints
+  sdk.api.register("getPanes", getPanes);
+  
+  // TODO Phase 2: Initialize storage and stores
 }

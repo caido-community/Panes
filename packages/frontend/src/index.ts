@@ -1,4 +1,5 @@
 import { Classic } from "@caido/primevue";
+import { createPinia } from "pinia";
 import PrimeVue from "primevue/config";
 import { createApp } from "vue";
 
@@ -10,6 +11,10 @@ import App from "./views/App.vue";
 // This is the entry point for the frontend plugin
 export const init = (sdk: FrontendSDK) => {
   const app = createApp(App);
+  const pinia = createPinia();
+
+  // Use Pinia for state management
+  app.use(pinia);
 
   // Load the PrimeVue component library
   app.use(PrimeVue, {
@@ -27,20 +32,19 @@ export const init = (sdk: FrontendSDK) => {
     width: "100%",
   });
 
-  // Set the ID of the root element
-  // Replace this with the value of the prefixWrap plugin in caido.config.ts
-  // This is necessary to prevent styling conflicts between plugins
-  root.id = `plugin--frontend-vue`;
+  // Set the ID of the root element to match the prefixWrap plugin in caido.config.ts
+  root.id = `plugin--panes`;
 
   // Mount the app to the root element
   app.mount(root);
 
   // Add the page to the navigation
-  // Make sure to use a unique name for the page
-  sdk.navigation.addPage("/my-plugin", {
+  sdk.navigation.addPage("/panes", {
     body: root,
   });
 
   // Add a sidebar item
-  sdk.sidebar.registerItem("My Plugin", "/my-plugin");
+  sdk.sidebar.registerItem("Panes", "/panes", {
+    icon: "fas fa-window-restore",
+  });
 };
