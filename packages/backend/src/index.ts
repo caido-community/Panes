@@ -1,26 +1,48 @@
-import type { DefineAPI, SDK } from "caido:plugin";
+import type { DefineAPI } from "caido:plugin";
 
-// Placeholder functions for Phase 2
-const getPanes = async (sdk: SDK) => {
-  sdk.console.log("getPanes called - will be implemented in Phase 2");
-  return { kind: "Success" as const, value: [] };
-};
+import {
+  createPane,
+  deletePane,
+  getPane,
+  getPanes,
+  togglePane,
+  updatePane,
+} from "./api/panes";
+import { getActivePanesForLocation, getPaneInputData } from "./api/transform";
+import { setSDK } from "./sdk";
+import { panesStore } from "./stores/panes";
+import type { BackendSDK } from "./types";
+
+export { type BackendEvents } from "./types";
 
 export type API = DefineAPI<{
   getPanes: typeof getPanes;
+  getPane: typeof getPane;
+  createPane: typeof createPane;
+  updatePane: typeof updatePane;
+  deletePane: typeof deletePane;
+  togglePane: typeof togglePane;
+  getPaneInputData: typeof getPaneInputData;
+  getActivePanesForLocation: typeof getActivePanesForLocation;
 }>;
 
-export type BackendEvents = {
-  "pane:created": (paneId: string) => void;
-  "pane:updated": (paneId: string) => void;
-  "pane:deleted": (paneId: string) => void;
-};
+export function init(sdk: BackendSDK) {
+  setSDK(sdk);
 
-export function init(sdk: SDK<API, BackendEvents>) {
-  sdk.console.log("Panes plugin backend initialized");
-  
-  // Register API endpoints
+  panesStore.initialize();
+
   sdk.api.register("getPanes", getPanes);
-  
-  // TODO Phase 2: Initialize storage and stores
+  sdk.api.register("getPane", getPane);
+  sdk.api.register("createPane", createPane);
+  sdk.api.register("updatePane", updatePane);
+  sdk.api.register("deletePane", deletePane);
+  sdk.api.register("togglePane", togglePane);
+  sdk.api.register("getPaneInputData", getPaneInputData);
+  sdk.api.register("getActivePanesForLocation", getActivePanesForLocation);
+
+  sdk.events.onProjectChange(async (_, project) => {
+    const projectId = project?.getId();
+    await panesStore.switchProject(projectId);
+    sdk.api.send("project:changed", projectId);
+  });
 }

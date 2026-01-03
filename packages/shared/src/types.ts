@@ -1,4 +1,4 @@
-export type PaneInput = 
+export type PaneInput =
   | "request.body"
   | "request.headers"
   | "request.query"
@@ -8,16 +8,14 @@ export type PaneInput =
   | "response.raw"
   | "request-response";
 
-export type PaneLocation = 
+export type PaneLocation =
   | "http-history"
   | "sitemap"
   | "replay"
   | "automate"
   | "intercept";
 
-export type TransformationType = 
-  | "workflow"
-  | "command";
+export type TransformationType = "workflow" | "command";
 
 export type WorkflowTransformation = {
   type: "workflow";
@@ -49,7 +47,7 @@ export type PanesConfig = {
   panes: Pane[];
 };
 
-export type Result<T> = 
+export type Result<T> =
   | { kind: "Success"; value: T }
   | { kind: "Error"; error: string };
 

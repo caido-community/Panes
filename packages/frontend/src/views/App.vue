@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import Button from "primevue/button";
 import MenuBar from "primevue/menubar";
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 
+import { usePanesStore } from "@/stores/panes";
 import Dashboard from "@/views/Dashboard.vue";
 import PanesManager from "@/views/PanesManager.vue";
 import Usage from "@/views/Usage.vue";
@@ -10,11 +11,15 @@ import Usage from "@/views/Usage.vue";
 type Page = "Dashboard" | "Panes" | "Usage";
 
 const page = ref<Page>("Dashboard");
+const panesStore = usePanesStore();
+
+onMounted(() => {
+  panesStore.initialize();
+});
 
 const items = [
   {
     label: "Dashboard",
-    class: "mx-1",
     isActive: () => page.value === "Dashboard",
     command: () => {
       page.value = "Dashboard";
@@ -22,7 +27,6 @@ const items = [
   },
   {
     label: "Panes",
-    class: "mx-1",
     isActive: () => page.value === "Panes",
     command: () => {
       page.value = "Panes";
@@ -30,7 +34,6 @@ const items = [
   },
   {
     label: "Usage",
-    class: "mx-1",
     isActive: () => page.value === "Usage",
     command: () => {
       page.value = "Usage";
@@ -75,9 +78,3 @@ const component = computed(() => {
     </div>
   </div>
 </template>
-
-<style scoped>
-#plugin--panes {
-  height: 100%;
-}
-</style>

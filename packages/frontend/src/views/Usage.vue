@@ -5,4 +5,3 @@ import { Usage } from "@/components/Usage";
 <template>
   <Usage />
 </template>
-

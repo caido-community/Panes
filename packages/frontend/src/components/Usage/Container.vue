@@ -3,14 +3,7 @@ import Card from "primevue/card";
 
 import { useForm } from "./useForm";
 
-const {
-  sections,
-  activeSection,
-  contentRef,
-  scrollToSection,
-  handleScroll,
-  isActive,
-} = useForm();
+const { sections, scrollToSection, isActive, contentRef } = useForm();
 </script>
 
 <template>
@@ -83,4 +76,3 @@ const {
     </div>
   </div>
 </template>
-

@@ -53,6 +53,7 @@ export const useForm = () => {
     const scrollPosition = contentRef.value.scrollTop + 200;
     for (let i = sections.length - 1; i >= 0; i--) {
       const section = sections[i];
+      if (section === undefined) continue;
       const element = document.getElementById(section.id);
       if (element !== null && element.offsetTop <= scrollPosition) {
         activeSection.value = section.id;
@@ -80,4 +81,3 @@ export const useForm = () => {
     isActive,
   };
 };
-

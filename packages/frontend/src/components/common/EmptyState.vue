@@ -15,4 +15,3 @@ const { icon = "fas fa-inbox", message = "" } = defineProps<{
     </div>
   </div>
 </template>
-
