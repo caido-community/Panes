@@ -1,5 +1,5 @@
 import type { Request, Response } from "caido:utils";
-import type { Pane, PaneInput, Result } from "shared";
+import type { InputData, Pane, PaneInput, Result } from "shared";
 import { error, ok } from "shared";
 
 import { requireSDK } from "../sdk";
@@ -9,15 +9,6 @@ type TransformResult = {
   output: string;
   paneId: string;
   paneName: string;
-};
-
-type InputData = {
-  input: string;
-  paneId: string;
-  paneName: string;
-  workflowId?: string;
-  command?: string;
-  transformationType: "workflow" | "command";
 };
 
 function extractInput(
@@ -98,19 +89,19 @@ export async function getInputData(
     return error("No input data available");
   }
 
+  const transformation =
+    pane.transformation.type === "workflow"
+      ? {
+          type: "workflow" as const,
+          workflowId: pane.transformation.workflowId,
+        }
+      : { type: "command" as const, command: pane.transformation.command };
+
   return ok({
     input,
     paneId: pane.id,
     paneName: pane.name,
-    workflowId:
-      pane.transformation.type === "workflow"
-        ? pane.transformation.workflowId
-        : undefined,
-    command:
-      pane.transformation.type === "command"
-        ? pane.transformation.command
-        : undefined,
-    transformationType: pane.transformation.type,
+    transformation,
   });
 }
 
@@ -126,7 +117,7 @@ export async function transformData(
 
   const data = result.value;
 
-  if (data.transformationType === "command") {
+  if (data.transformation.type === "command") {
     return error(
       "Shell command execution is not supported in the Caido runtime. Please use a Convert workflow instead.",
     );

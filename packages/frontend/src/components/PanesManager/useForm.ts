@@ -1,22 +1,15 @@
-import type { Pane, PaneInput, PaneLocation, TransformationType } from "shared";
+import type {
+  CreatePaneInput,
+  Pane,
+  PaneFormData,
+  PaneInput,
+  PaneLocation,
+  TransformationType,
+} from "shared";
 import { computed, onMounted, ref, watch } from "vue";
 
 import { useSDK } from "@/plugins/sdk";
 import { usePanesStore } from "@/stores/panes";
-
-type PaneFormData = {
-  name: string;
-  tabName: string;
-  description: string;
-  enabled: boolean;
-  input: PaneInput;
-  httpql: string;
-  locations: PaneLocation[];
-  transformationType: TransformationType;
-  workflowId: string;
-  command: string;
-  timeout: number;
-};
 
 type Workflow = {
   id: string;
@@ -150,7 +143,7 @@ export const useForm = () => {
     return true;
   });
 
-  const buildPaneData = (): Omit<Pane, "id" | "createdAt" | "updatedAt"> => {
+  const buildPaneData = (): CreatePaneInput => {
     const data = formData.value;
     return {
       name: data.name.trim(),

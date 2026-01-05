@@ -56,12 +56,24 @@ export const usePanesStore = defineStore("panes", () => {
     loading.value = false;
   }
 
+  function promptReload() {
+    sdk.window.showToast("Reloading to apply view mode changes...", {
+      variant: "info",
+      duration: 1500,
+    });
+    localStorage.setItem("panes-restore-path", window.location.hash);
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
+  }
+
   async function createPane(
     data: Omit<Pane, "id" | "createdAt" | "updatedAt">,
   ): Promise<Pane | undefined> {
     const result = await sdk.backend.createPane(data);
     if (result.kind === "Success") {
       sdk.window.showToast("Pane created", { variant: "success" });
+      promptReload();
       return result.value;
     }
     sdk.window.showToast(`Failed to create pane: ${result.error}`, {
@@ -77,6 +89,7 @@ export const usePanesStore = defineStore("panes", () => {
     const result = await sdk.backend.updatePane(id, updates);
     if (result.kind === "Success") {
       sdk.window.showToast("Pane updated", { variant: "success" });
+      promptReload();
       return result.value;
     }
     sdk.window.showToast(`Failed to update pane: ${result.error}`, {
@@ -86,9 +99,15 @@ export const usePanesStore = defineStore("panes", () => {
   }
 
   async function deletePane(id: string): Promise<boolean> {
+    const existingPane = getPaneById(id);
+    const wasEnabled = existingPane?.enabled ?? false;
+
     const result = await sdk.backend.deletePane(id);
     if (result.kind === "Success") {
       sdk.window.showToast("Pane deleted", { variant: "success" });
+      if (wasEnabled) {
+        promptReload();
+      }
       return true;
     }
     sdk.window.showToast(`Failed to delete pane: ${result.error}`, {
@@ -100,6 +119,7 @@ export const usePanesStore = defineStore("panes", () => {
   async function togglePane(id: string, enabled: boolean): Promise<boolean> {
     const result = await sdk.backend.togglePane(id, enabled);
     if (result.kind === "Success") {
+      promptReload();
       return true;
     }
     sdk.window.showToast(`Failed to toggle pane: ${result.error}`, {

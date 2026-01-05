@@ -7,25 +7,16 @@ import Select from "primevue/select";
 import SelectButton from "primevue/selectbutton";
 import Textarea from "primevue/textarea";
 import ToggleSwitch from "primevue/toggleswitch";
-import type { PaneInput, PaneLocation, TransformationType } from "shared";
-import { computed } from "vue";
+import type {
+  PaneFormData,
+  PaneInput,
+  PaneLocation,
+  TransformationType,
+} from "shared";
 
-type PaneFormData = {
-  name: string;
-  tabName: string;
-  description: string;
-  enabled: boolean;
-  input: PaneInput;
-  httpql: string;
-  locations: PaneLocation[];
-  transformationType: TransformationType;
-  workflowId: string;
-  command: string;
-  timeout: number;
-};
+const form = defineModel<PaneFormData>({ required: true });
 
-const props = defineProps<{
-  modelValue: PaneFormData;
+defineProps<{
   isCreating: boolean;
   canSave: boolean;
   inputOptions: { label: string; value: PaneInput }[];
@@ -36,26 +27,20 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  "update:modelValue": [value: PaneFormData];
   save: [];
   cancel: [];
   delete: [];
 }>();
 
-const form = computed({
-  get: () => props.modelValue,
-  set: (value) => emit("update:modelValue", value),
-});
-
 const updateField = <K extends keyof PaneFormData>(
   key: K,
   value: PaneFormData[K],
 ) => {
-  emit("update:modelValue", { ...props.modelValue, [key]: value });
+  form.value = { ...form.value, [key]: value };
 };
 
 const toggleLocation = (location: PaneLocation) => {
-  const locations = [...props.modelValue.locations];
+  const locations = [...form.value.locations];
   const index = locations.indexOf(location);
   if (index === -1) {
     locations.push(location);
@@ -66,7 +51,7 @@ const toggleLocation = (location: PaneLocation) => {
 };
 
 const isLocationSelected = (location: PaneLocation) => {
-  return props.modelValue.locations.includes(location);
+  return form.value.locations.includes(location);
 };
 </script>
 

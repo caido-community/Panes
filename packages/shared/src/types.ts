@@ -42,6 +42,24 @@ export type Pane = {
   updatedAt: number;
 };
 
+export type CreatePaneInput = Omit<Pane, "id" | "createdAt" | "updatedAt">;
+
+export type UpdatePaneInput = Partial<CreatePaneInput>;
+
+export type PaneFormData = {
+  name: string;
+  tabName: string;
+  description: string;
+  enabled: boolean;
+  input: PaneInput;
+  httpql: string;
+  locations: PaneLocation[];
+  transformationType: TransformationType;
+  workflowId: string;
+  command: string;
+  timeout: number;
+};
+
 export type PanesConfig = {
   version: number;
   panes: Pane[];
@@ -62,6 +80,15 @@ export type TransformResult = {
   output: string;
   executionTime: number;
   error?: string;
+};
+
+export type InputData = {
+  input: string;
+  paneId: string;
+  paneName: string;
+  transformation:
+    | { type: "workflow"; workflowId: string }
+    | { type: "command"; command: string };
 };
 
 export function ok<T>(value: T): Result<T> {

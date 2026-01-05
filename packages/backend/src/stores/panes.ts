@@ -1,41 +1,18 @@
-import type { Pane, PanesConfig } from "shared";
+import type {
+  CreatePaneInput,
+  Pane,
+  PanesConfig,
+  UpdatePaneInput,
+} from "shared";
 
 import { requireSDK } from "../sdk";
 import { generateId } from "../utils";
 
 import { ProjectScopedStore } from "./project-store";
 
-const DEFAULT_PANES: Omit<Pane, "id" | "createdAt" | "updatedAt">[] = [
-  {
-    name: "JQ JSON",
-    tabName: "JQ",
-    description: "Pretty-print JSON responses using jq",
-    enabled: true,
-    input: "response.body",
-    httpql: 'resp.headers.cont:"application/json"',
-    locations: ["http-history", "replay"],
-    transformation: {
-      type: "command",
-      command: 'echo "{{input}}" | jq .',
-      timeout: 10,
-    },
-  },
-  {
-    name: "Base64 Decode",
-    tabName: "B64",
-    description: "Decode base64 encoded content",
-    enabled: false,
-    input: "response.body",
-    locations: ["http-history", "replay"],
-    transformation: {
-      type: "command",
-      command: 'echo "{{input}}" | base64 -d',
-      timeout: 5,
-    },
-  },
-];
+const DEFAULT_PANES: CreatePaneInput[] = [];
 
-function createPane(data: Omit<Pane, "id" | "createdAt" | "updatedAt">): Pane {
+function createPane(data: CreatePaneInput): Pane {
   const now = Date.now();
   return {
     ...data,
@@ -69,7 +46,7 @@ class PanesStore extends ProjectScopedStore<PanesConfig> {
     return this.data.panes.filter((p) => p.enabled);
   }
 
-  createPane(data: Omit<Pane, "id" | "createdAt" | "updatedAt">): Pane {
+  createPane(data: CreatePaneInput): Pane {
     const pane = createPane(data);
     this.data.panes.push(pane);
     this.notify();
@@ -81,7 +58,7 @@ class PanesStore extends ProjectScopedStore<PanesConfig> {
     return pane;
   }
 
-  updatePane(id: string, updates: Partial<Pane>): Pane | undefined {
+  updatePane(id: string, updates: UpdatePaneInput): Pane | undefined {
     const index = this.data.panes.findIndex((p) => p.id === id);
     if (index === -1) return undefined;
 
