@@ -19,17 +19,14 @@ const attrs = useAttrs() as unknown as {
 const { state } = useViewMode(
   props.paneId ?? "",
   attrs.sdk as unknown as FrontendSDK,
-  undefined, 
+  undefined,
   attrs.response,
 );
 </script>
 
 <template>
   <div class="h-full w-full flex flex-col bg-surface-800 text-surface-100">
-    <div
-      v-if="state.loading"
-      class="h-full flex items-center justify-center"
-    >
+    <div v-if="state.loading" class="h-full flex items-center justify-center">
       <ProgressSpinner class="w-10 h-10" stroke-width="4" />
     </div>
 
@@ -48,4 +45,3 @@ const { state } = useViewMode(
     </div>
   </div>
 </template>
-

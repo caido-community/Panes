@@ -5,12 +5,6 @@ import { error, ok } from "shared";
 import { requireSDK } from "../sdk";
 import { panesStore } from "../stores/panes";
 
-type TransformResult = {
-  output: string;
-  paneId: string;
-  paneName: string;
-};
-
 function extractInput(
   request: Request,
   response: Response | undefined,
@@ -49,7 +43,8 @@ function matchesHttpql(
 
   const sdk = requireSDK();
   try {
-    return sdk.requests.matches(httpql, request, response);
+    const result = sdk.requests.matches(httpql, request, response);
+    return Boolean(result);
   } catch {
     return false;
   }
@@ -78,7 +73,8 @@ export async function getInputData(
   const { request, response } = requestResult;
 
   if (pane.httpql !== undefined && pane.httpql.trim() !== "") {
-    if (!matchesHttpql(pane.httpql, request, response)) {
+    const httpqlMatches = matchesHttpql(pane.httpql, request, response);
+    if (Boolean(httpqlMatches) === false) {
       return error("Request does not match HTTPQL filter");
     }
   }
@@ -103,29 +99,6 @@ export async function getInputData(
     paneName: pane.name,
     transformation,
   });
-}
-
-export async function transformData(
-  paneId: string,
-  requestId: string,
-): Promise<Result<TransformResult>> {
-  const result = await getInputData(paneId, requestId);
-
-  if (result.kind === "Error") {
-    return result;
-  }
-
-  const data = result.value;
-
-  if (data.transformation.type === "command") {
-    return error(
-      "Shell command execution is not supported in the Caido runtime. Please use a Convert workflow instead.",
-    );
-  }
-
-  return error(
-    "Workflow transformation must be executed from the frontend using the SDK.",
-  );
 }
 
 export function getEnabledPanesForLocation(

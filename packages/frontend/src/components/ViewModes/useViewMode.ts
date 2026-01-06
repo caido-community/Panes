@@ -1,7 +1,7 @@
 import type { RequestFull } from "@caido/sdk-frontend";
+import { isResponseInput } from "shared";
 import { onMounted, ref, watch } from "vue";
 
-import { isResponseInput } from "shared";
 import { usePanesStore } from "@/stores/panes";
 import type { FrontendSDK } from "@/types";
 
@@ -18,13 +18,11 @@ type Response = {
   getId?: () => string;
 };
 
-export type ViewModeState = {
+type ViewModeState = {
   output: string;
   loading: boolean;
   error: string;
 };
-
-export { type RequestFull };
 
 function extractResponseInput(
   response: unknown,
@@ -36,9 +34,10 @@ function extractResponseInput(
     switch (inputType) {
       case "response.body":
         return resp.getBody?.()?.toText?.() ?? "";
-      case "response.headers":
+      case "response.headers": {
         const headers = resp.getHeaders?.();
         return headers ? JSON.stringify(headers, null, 2) : "";
+      }
       case "response.raw":
         return resp.getRaw?.()?.toText?.() ?? "";
       default:
@@ -78,7 +77,7 @@ export const useViewMode = (
     const isResponseOnly =
       isResponseInput(pane.input) && pane.input !== "request-response";
 
-    if (isResponseOnly && response) {
+    if (isResponseOnly && response !== undefined) {
       const input = extractResponseInput(
         response,
         pane.input as "response.body" | "response.headers" | "response.raw",
@@ -91,6 +90,7 @@ export const useViewMode = (
       }
 
       if (pane.httpql !== undefined && pane.httpql.trim() !== "") {
+        // HTTPQL filtering requires requestId which is not available in response-only view modes
       }
 
       if (pane.transformation.type === "command") {
@@ -114,9 +114,9 @@ export const useViewMode = (
     }
 
     let requestId: string | undefined;
-    if (request?.id) {
+    if (request?.id !== undefined) {
       requestId = request.id;
-    } else if (response) {
+    } else if (response !== undefined) {
       requestId =
         (response as unknown as { requestId?: string })?.requestId ??
         (response as unknown as { request?: { id?: string } })?.request?.id;
@@ -169,7 +169,11 @@ export const useViewMode = (
   watch(
     () => {
       const pane = store.getPaneById(paneId);
-      if (pane && isResponseInput(pane.input) && pane.input !== "request-response") {
+      if (
+        pane &&
+        isResponseInput(pane.input) &&
+        pane.input !== "request-response"
+      ) {
         return (response as Response)?.getId?.() ?? "";
       }
       return request?.id ?? "";
