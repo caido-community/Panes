@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import type { Pane } from "shared";
+import type { CreatePaneInput, Pane, UpdatePaneInput } from "shared";
 import { computed, ref } from "vue";
 
 import { useSDK } from "../plugins/sdk";
@@ -67,9 +67,7 @@ export const usePanesStore = defineStore("panes", () => {
     }, 1500);
   }
 
-  async function createPane(
-    data: Omit<Pane, "id" | "createdAt" | "updatedAt">,
-  ): Promise<Pane | undefined> {
+  async function createPane(data: CreatePaneInput): Promise<Pane | undefined> {
     const result = await sdk.backend.createPane(data);
     if (result.kind === "Success") {
       sdk.window.showToast("Pane created", { variant: "success" });
@@ -84,7 +82,7 @@ export const usePanesStore = defineStore("panes", () => {
 
   async function updatePane(
     id: string,
-    updates: Partial<Pane>,
+    updates: UpdatePaneInput,
   ): Promise<Pane | undefined> {
     const result = await sdk.backend.updatePane(id, updates);
     if (result.kind === "Success") {

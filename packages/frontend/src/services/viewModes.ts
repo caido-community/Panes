@@ -15,13 +15,6 @@ export function registerViewModes(sdk: FrontendSDK, panes: Pane[]) {
   }
 }
 
-type ResponseViewModeSDK = {
-  addResponseViewMode: (opts: {
-    label: string;
-    view: { component: unknown; props?: Record<string, unknown> };
-  }) => void;
-};
-
 function registerViewModeForLocation(
   sdk: FrontendSDK,
   pane: Pane,
@@ -43,9 +36,7 @@ function registerViewModeForLocation(
   switch (location) {
     case "http-history": {
       if (isResponse) {
-        (sdk.httpHistory as unknown as ResponseViewModeSDK).addResponseViewMode(
-          viewModeOptions,
-        );
+        sdk.httpHistory.addResponseViewMode(viewModeOptions);
       } else {
         sdk.httpHistory.addRequestViewMode(viewModeOptions);
       }
@@ -53,9 +44,7 @@ function registerViewModeForLocation(
     }
     case "replay": {
       if (isResponse) {
-        (sdk.replay as unknown as ResponseViewModeSDK).addResponseViewMode(
-          viewModeOptions,
-        );
+        sdk.replay.addResponseViewMode(viewModeOptions);
       } else {
         sdk.replay.addRequestViewMode(viewModeOptions);
       }
@@ -63,9 +52,7 @@ function registerViewModeForLocation(
     }
     case "sitemap": {
       if (isResponse) {
-        (sdk.sitemap as unknown as ResponseViewModeSDK).addResponseViewMode(
-          viewModeOptions,
-        );
+        sdk.sitemap.addResponseViewMode(viewModeOptions);
       } else {
         sdk.sitemap.addRequestViewMode(viewModeOptions);
       }
@@ -73,9 +60,7 @@ function registerViewModeForLocation(
     }
     case "automate": {
       if (isResponse) {
-        (sdk.automate as unknown as ResponseViewModeSDK).addResponseViewMode(
-          viewModeOptions,
-        );
+        sdk.automate.addResponseViewMode(viewModeOptions);
       } else {
         sdk.automate.addRequestViewMode(viewModeOptions);
       }
@@ -83,9 +68,7 @@ function registerViewModeForLocation(
     }
     case "intercept": {
       if (isResponse) {
-        (sdk.intercept as unknown as ResponseViewModeSDK).addResponseViewMode(
-          viewModeOptions,
-        );
+        sdk.intercept.addResponseViewMode(viewModeOptions);
       } else {
         sdk.intercept.addRequestViewMode(viewModeOptions);
       }

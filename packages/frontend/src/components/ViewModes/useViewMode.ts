@@ -18,11 +18,10 @@ type Response = {
   getId?: () => string;
 };
 
-type ViewModeState = {
-  output: string;
-  loading: boolean;
-  error: string;
-};
+type ViewModeState =
+  | { type: "Loading" }
+  | { type: "Success"; output: string }
+  | { type: "Failed"; error: string };
 
 function extractResponseInput(
   response: unknown,
@@ -56,21 +55,14 @@ export const useViewMode = (
 ) => {
   const store = usePanesStore();
 
-  const state = ref<ViewModeState>({
-    output: "",
-    loading: true,
-    error: "",
-  });
+  const state = ref<ViewModeState>({ type: "Loading" });
 
   const execute = async () => {
-    state.value.loading = true;
-    state.value.error = "";
-    state.value.output = "";
+    state.value = { type: "Loading" };
 
     const pane = store.getPaneById(paneId);
     if (pane === undefined) {
-      state.value.error = "Pane not found.";
-      state.value.loading = false;
+      state.value = { type: "Failed", error: "Pane not found." };
       return;
     }
 
@@ -84,8 +76,7 @@ export const useViewMode = (
       );
 
       if (input === "") {
-        state.value.error = "No response data available.";
-        state.value.loading = false;
+        state.value = { type: "Failed", error: "No response data available." };
         return;
       }
 
@@ -94,9 +85,11 @@ export const useViewMode = (
       }
 
       if (pane.transformation.type === "command") {
-        state.value.error =
-          "Shell commands are not supported. Please use a Convert workflow.";
-        state.value.loading = false;
+        state.value = {
+          type: "Failed",
+          error:
+            "Shell commands are not supported. Please use a Convert workflow.",
+        };
         return;
       }
 
@@ -104,12 +97,14 @@ export const useViewMode = (
         const workflowResult = await (
           sdk as unknown as SDKWithWorkflows
         ).workflows.run(pane.transformation.workflowId, input);
-        state.value.output = workflowResult;
+        state.value = { type: "Success", output: workflowResult };
       } catch (e) {
-        state.value.error = `Workflow error: ${e instanceof Error ? e.message : String(e)}`;
+        state.value = {
+          type: "Failed",
+          error: `Workflow error: ${e instanceof Error ? e.message : String(e)}`,
+        };
       }
 
-      state.value.loading = false;
       return;
     }
 
@@ -124,29 +119,32 @@ export const useViewMode = (
 
     if (requestId === undefined) {
       if (pane.input === "request-response") {
-        state.value.error =
-          "Request-response input requires request context. Use a request view mode instead.";
+        state.value = {
+          type: "Failed",
+          error:
+            "Request-response input requires request context. Use a request view mode instead.",
+        };
       } else {
-        state.value.error = "Request ID not available.";
+        state.value = { type: "Failed", error: "Request ID not available." };
       }
-      state.value.loading = false;
       return;
     }
 
     const result = await sdk.backend.getPaneInputData(paneId, requestId);
 
     if (result.kind === "Error") {
-      state.value.error = result.error;
-      state.value.loading = false;
+      state.value = { type: "Failed", error: result.error };
       return;
     }
 
     const { input, transformation } = result.value;
 
     if (transformation.type === "command") {
-      state.value.error =
-        "Shell commands are not supported. Please use a Convert workflow.";
-      state.value.loading = false;
+      state.value = {
+        type: "Failed",
+        error:
+          "Shell commands are not supported. Please use a Convert workflow.",
+      };
       return;
     }
 
@@ -154,12 +152,13 @@ export const useViewMode = (
       const workflowResult = await (
         sdk as unknown as SDKWithWorkflows
       ).workflows.run(transformation.workflowId, input);
-      state.value.output = workflowResult;
+      state.value = { type: "Success", output: workflowResult };
     } catch (e) {
-      state.value.error = `Workflow error: ${e instanceof Error ? e.message : String(e)}`;
+      state.value = {
+        type: "Failed",
+        error: `Workflow error: ${e instanceof Error ? e.message : String(e)}`,
+      };
     }
-
-    state.value.loading = false;
   };
 
   onMounted(() => {
