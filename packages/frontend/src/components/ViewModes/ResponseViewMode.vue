@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { API, RequestFull } from "@caido/sdk-frontend";
+import type { API } from "@caido/sdk-frontend";
 import ProgressSpinner from "primevue/progressspinner";
 import { useAttrs } from "vue";
 
@@ -13,13 +13,14 @@ const props = defineProps<{
 
 const attrs = useAttrs() as unknown as {
   sdk: API;
-  request: RequestFull;
+  response: unknown;
 };
 
 const { state } = useViewMode(
   props.paneId ?? "",
   attrs.sdk as unknown as FrontendSDK,
-  attrs.request,
+  undefined, 
+  attrs.response,
 );
 </script>
 
@@ -47,3 +48,4 @@ const { state } = useViewMode(
     </div>
   </div>
 </template>
+

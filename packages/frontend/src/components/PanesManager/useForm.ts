@@ -1,6 +1,5 @@
 import type {
   CreatePaneInput,
-  Pane,
   PaneFormData,
   PaneInput,
   PaneLocation,

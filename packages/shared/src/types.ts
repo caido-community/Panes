@@ -98,3 +98,20 @@ export function ok<T>(value: T): Result<T> {
 export function error<T>(errorMessage: string): Result<T> {
   return { kind: "Error", error: errorMessage };
 }
+
+export function isResponseInput(input: PaneInput): boolean {
+  return (
+    input === "response.body" ||
+    input === "response.headers" ||
+    input === "response.raw"
+  );
+}
+
+export function isRequestInput(input: PaneInput): boolean {
+  return (
+    input === "request.body" ||
+    input === "request.headers" ||
+    input === "request.query" ||
+    input === "request.raw"
+  );
+}
