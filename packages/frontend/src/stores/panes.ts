@@ -11,8 +11,12 @@ export const usePanesStore = defineStore("panes", () => {
   const loading = ref(false);
   const error = ref<string | undefined>(undefined);
 
-  const enabledPanes = computed(() => panes.value.filter((p) => p.enabled));
-  const disabledPanes = computed(() => panes.value.filter((p) => !p.enabled));
+  const enabledPanes = computed(() =>
+    panes.value.filter((p) => p.enabled === true),
+  );
+  const disabledPanes = computed(() =>
+    panes.value.filter((p) => p.enabled === false),
+  );
 
   const getPaneById = (id: string) => panes.value.find((p) => p.id === id);
 
@@ -135,6 +139,7 @@ export const usePanesStore = defineStore("panes", () => {
     getPaneById,
     initialize,
     fetch,
+    promptReload,
     createPane,
     updatePane,
     deletePane,

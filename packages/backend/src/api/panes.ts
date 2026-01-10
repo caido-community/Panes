@@ -1,8 +1,10 @@
-import type { Pane, Result } from "shared";
+import type { ImportResult, Pane, PanesExport, Result } from "shared";
 import { error, ok } from "shared";
 
 import { panesStore } from "../stores/panes";
 import type { BackendSDK } from "../types";
+
+const EXPORT_VERSION = 1;
 
 export function getPanes(_sdk: BackendSDK): Result<Pane[]> {
   return ok(panesStore.getPanes());
@@ -38,7 +40,7 @@ export function updatePane(
 
 export function deletePane(_sdk: BackendSDK, id: string): Result<void> {
   const deleted = panesStore.deletePane(id);
-  if (!deleted) {
+  if (deleted === false) {
     return error("Pane not found");
   }
   return ok(undefined);
@@ -54,4 +56,65 @@ export function togglePane(
     return error("Pane not found");
   }
   return ok(pane);
+}
+
+export function exportPanes(
+  _sdk: BackendSDK,
+  paneIds?: string[],
+): Result<PanesExport> {
+  const allPanes = panesStore.getPanes();
+  const panesToExport =
+    paneIds !== undefined && paneIds.length > 0
+      ? allPanes.filter((p) => paneIds.includes(p.id))
+      : allPanes;
+
+  const exportData: PanesExport = {
+    version: EXPORT_VERSION,
+    exportDate: Date.now(),
+    panes: panesToExport.map((p) => ({
+      name: p.name,
+      tabName: p.tabName,
+      description: p.description,
+      enabled: p.enabled,
+      input: p.input,
+      httpql: p.httpql,
+      locations: p.locations,
+      transformation: p.transformation,
+    })),
+  };
+
+  return ok(exportData);
+}
+
+export function importPanes(
+  _sdk: BackendSDK,
+  exportData: PanesExport,
+  overwrite: boolean = false,
+): Result<ImportResult> {
+  const results: ImportResult = {
+    created: 0,
+    skipped: 0,
+    errors: [],
+  };
+
+  for (const paneData of exportData.panes) {
+    const existing = panesStore
+      .getPanes()
+      .find((p) => p.name === paneData.name);
+
+    if (existing !== undefined) {
+      if (overwrite) {
+        panesStore.updatePane(existing.id, paneData);
+        results.created++;
+      } else {
+        results.skipped++;
+      }
+      continue;
+    }
+
+    panesStore.createPane(paneData);
+    results.created++;
+  }
+
+  return ok(results);
 }

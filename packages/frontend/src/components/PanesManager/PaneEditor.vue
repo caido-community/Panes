@@ -123,7 +123,7 @@ const isLocationSelected = (location: PaneLocation) => {
       <label class="text-sm font-medium">HTTPQL Filter</label>
       <InputText
         :model-value="form.httpql"
-        placeholder='e.g., resp.headers.cont:"application/json"'
+        placeholder='e.g., resp.raw.cont:"application/json"'
         class="w-full font-mono text-sm"
         @update:model-value="updateField('httpql', $event)"
       />
@@ -176,11 +176,63 @@ const isLocationSelected = (location: PaneLocation) => {
             rows="3"
             @update:model-value="updateField('command', $event)"
           />
-          <p class="text-xs text-surface-400">
-            Use
-            <code v-pre class="bg-surface-700 px-1 rounded">{{ input }}</code>
-            as placeholder for input data
-          </p>
+          <details class="text-xs">
+            <summary
+              class="text-surface-400 cursor-pointer hover:text-surface-300 mb-1"
+            >
+              Available variables
+            </summary>
+            <div class="mt-2 p-2 bg-surface-800 rounded space-y-1">
+              <div class="font-mono text-xs">
+                <div>
+                  <code v-pre class="text-primary-400">{{ input }}</code> - The
+                  extracted input data
+                </div>
+                <div>
+                  <code v-pre class="text-primary-400">{{ requestId }}</code> -
+                  Request ID
+                </div>
+                <div>
+                  <code v-pre class="text-primary-400">{{ host }}</code> -
+                  Request host
+                </div>
+                <div>
+                  <code v-pre class="text-primary-400">{{ port }}</code> -
+                  Request port
+                </div>
+                <div>
+                  <code v-pre class="text-primary-400">{{ path }}</code> -
+                  Request path
+                </div>
+                <div>
+                  <code v-pre class="text-primary-400">{{ method }}</code> -
+                  HTTP method
+                </div>
+                <div>
+                  <code v-pre class="text-primary-400">{{ url }}</code> - Full
+                  request URL
+                </div>
+                <div>
+                  <code v-pre class="text-primary-400">{{ scheme }}</code> - URL
+                  scheme (http/https)
+                </div>
+                <div>
+                  <code v-pre class="text-primary-400">{{ query }}</code> -
+                  Query string
+                </div>
+                <div>
+                  <code v-pre class="text-primary-400">{{ responseCode }}</code>
+                  - Response status code (if available)
+                </div>
+                <div>
+                  <code v-pre class="text-primary-400">{{
+                    responseLength
+                  }}</code>
+                  - Response body length (if available)
+                </div>
+              </div>
+            </div>
+          </details>
         </div>
 
         <div class="space-y-2">

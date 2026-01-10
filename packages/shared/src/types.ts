@@ -5,8 +5,7 @@ export type PaneInput =
   | "request.raw"
   | "response.body"
   | "response.headers"
-  | "response.raw"
-  | "request-response";
+  | "response.raw";
 
 export type PaneLocation =
   | "http-history"
@@ -69,19 +68,6 @@ export type Result<T> =
   | { kind: "Success"; value: T }
   | { kind: "Error"; error: string };
 
-export type TransformRequest = {
-  paneId: string;
-  requestId: string;
-};
-
-export type TransformResult = {
-  paneId: string;
-  requestId: string;
-  output: string;
-  executionTime: number;
-  error?: string;
-};
-
 export type InputData = {
   input: string;
   paneId: string;
@@ -115,3 +101,36 @@ export function isRequestInput(input: PaneInput): boolean {
     input === "request.raw"
   );
 }
+
+export type PanesExport = {
+  version: number;
+  exportDate: number;
+  panes: Omit<Pane, "id" | "createdAt" | "updatedAt">[];
+};
+
+export type ImportResult = {
+  created: number;
+  skipped: number;
+  errors: string[];
+};
+
+export type WorkflowInfo = {
+  id: string;
+  name: string;
+  kind: "CONVERT" | "ACTIVE" | "PASSIVE";
+  enabled: boolean;
+};
+
+export type WorkflowValidationResult = {
+  paneId: string;
+  paneName: string;
+  workflowId: string;
+  status: "valid" | "missing";
+  workflowName?: string;
+};
+
+export type AvailableVariable = {
+  name: string;
+  description: string;
+  example: string;
+};

@@ -4,24 +4,12 @@ import type {
   PaneInput,
   PaneLocation,
   TransformationType,
+  WorkflowInfo,
 } from "shared";
 import { computed, onMounted, ref, watch } from "vue";
 
 import { useSDK } from "@/plugins/sdk";
 import { usePanesStore } from "@/stores/panes";
-
-type Workflow = {
-  id: string;
-  name: string;
-  description: string;
-  kind: "Convert" | "Active" | "Passive";
-};
-
-type WorkflowOption = {
-  id: string;
-  name: string;
-  kind: string;
-};
 
 const getDefaultFormData = (): PaneFormData => ({
   name: "",
@@ -31,7 +19,7 @@ const getDefaultFormData = (): PaneFormData => ({
   input: "response.body",
   httpql: "",
   locations: ["http-history", "replay"],
-  transformationType: "command",
+  transformationType: "workflow",
   workflowId: "",
   command: "",
   timeout: 30,
@@ -44,26 +32,22 @@ export const useForm = () => {
   const selectedPaneId = ref<string | undefined>(undefined);
   const isCreating = ref(false);
   const formData = ref<PaneFormData>(getDefaultFormData());
-  const workflows = ref<WorkflowOption[]>([]);
+  const workflows = ref<WorkflowInfo[]>([]);
   const workflowsLoading = ref(false);
+  const workflowsError = ref<string | undefined>(undefined);
 
-  const fetchWorkflows = () => {
+  const fetchWorkflows = async () => {
     workflowsLoading.value = true;
-    try {
-      type SDKWithWorkflows = typeof sdk & {
-        workflows: { getWorkflows: () => Workflow[] };
-      };
-      const allWorkflows = (sdk as SDKWithWorkflows).workflows.getWorkflows();
-      workflows.value = allWorkflows
-        .filter((w: Workflow) => w.kind === "Convert")
-        .map((w: Workflow) => ({
-          id: w.id,
-          name: w.name,
-          kind: w.kind,
-        }));
-    } catch {
+    workflowsError.value = undefined;
+
+    const result = await sdk.backend.getConvertWorkflows();
+    if (result.kind === "Success") {
+      workflows.value = result.value;
+    } else {
+      workflowsError.value = result.error;
       workflows.value = [];
     }
+
     workflowsLoading.value = false;
   };
 
@@ -192,7 +176,6 @@ export const useForm = () => {
     { label: "Response Body", value: "response.body" },
     { label: "Response Headers", value: "response.headers" },
     { label: "Response Raw", value: "response.raw" },
-    { label: "Both (Request + Response)", value: "request-response" },
   ];
 
   const locationOptions: { label: string; value: PaneLocation }[] = [
@@ -205,8 +188,8 @@ export const useForm = () => {
 
   const transformationOptions: { label: string; value: TransformationType }[] =
     [
-      { label: "Shell Command", value: "command" },
       { label: "Workflow", value: "workflow" },
+      { label: "Shell Command (Not Supported)", value: "command" },
     ];
 
   const workflowOptions = computed(() =>
@@ -229,6 +212,7 @@ export const useForm = () => {
     transformationOptions,
     workflowOptions,
     workflowsLoading,
+    workflowsError,
     fetchWorkflows,
     selectPane,
     startCreate,

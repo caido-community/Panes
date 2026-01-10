@@ -9,6 +9,7 @@ const config: RawConfigurationOrFn = {
       entry: ["src/index.ts"],
       project: ["src/**/*.ts"],
       ignoreDependencies: ["caido"],
+      ignore: ["src/services/variable-expander.ts"],
     },
     "packages/frontend": {
       entry: ["src/index.ts"],

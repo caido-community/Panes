@@ -6,17 +6,17 @@ import { useViewMode } from "./useViewMode";
 
 import type { FrontendSDK } from "@/types";
 
-const props = defineProps<{
+const { paneId, sdk, request } = defineProps<{
   paneId?: string;
   sdk: API;
   request: RequestFull;
 }>();
 
-const { state } = useViewMode(
-  props.paneId ?? "",
-  props.sdk as unknown as FrontendSDK,
-  props.request,
-);
+const { state } = useViewMode({
+  paneId: () => paneId,
+  sdk: () => sdk as unknown as FrontendSDK,
+  request: () => request,
+});
 </script>
 
 <template>
@@ -36,10 +36,16 @@ const { state } = useViewMode(
       <p class="text-surface-300 text-sm max-w-md">{{ state.error }}</p>
     </div>
 
-    <div v-else-if="state.type === 'Success'" class="h-full overflow-auto p-4">
-      <pre class="text-sm font-mono whitespace-pre-wrap break-words">{{
-        state.output
-      }}</pre>
+    <div
+      v-else-if="state.type === 'Success'"
+      class="h-full w-full overflow-auto p-4"
+    >
+      <div
+        class="text-sm font-mono whitespace-pre-wrap break-words break-all overflow-wrap-anywhere"
+        style="word-break: break-all; overflow-wrap: anywhere"
+      >
+        {{ state.output }}
+      </div>
     </div>
   </div>
 </template>

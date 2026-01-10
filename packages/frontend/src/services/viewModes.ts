@@ -21,14 +21,22 @@ function registerViewModeForLocation(
   location: PaneLocation,
 ) {
   const isResponse = isResponseInput(pane.input);
-  const component = isResponse
-    ? markRaw(ResponseViewMode)
-    : markRaw(RequestViewMode);
 
-  const viewModeOptions = {
+  const requestComponent = markRaw(RequestViewMode);
+  const responseComponent = markRaw(ResponseViewMode);
+
+  const requestViewModeOptions = {
     label: pane.tabName,
     view: {
-      component,
+      component: requestComponent,
+      props: { paneId: pane.id },
+    },
+  };
+
+  const responseViewModeOptions = {
+    label: pane.tabName,
+    view: {
+      component: responseComponent,
       props: { paneId: pane.id },
     },
   };
@@ -36,41 +44,41 @@ function registerViewModeForLocation(
   switch (location) {
     case "http-history": {
       if (isResponse) {
-        sdk.httpHistory.addResponseViewMode(viewModeOptions);
+        sdk.httpHistory.addResponseViewMode(responseViewModeOptions);
       } else {
-        sdk.httpHistory.addRequestViewMode(viewModeOptions);
+        sdk.httpHistory.addRequestViewMode(requestViewModeOptions);
       }
       break;
     }
     case "replay": {
       if (isResponse) {
-        sdk.replay.addResponseViewMode(viewModeOptions);
+        sdk.replay.addResponseViewMode(responseViewModeOptions);
       } else {
-        sdk.replay.addRequestViewMode(viewModeOptions);
+        sdk.replay.addRequestViewMode(requestViewModeOptions);
       }
       break;
     }
     case "sitemap": {
       if (isResponse) {
-        sdk.sitemap.addResponseViewMode(viewModeOptions);
+        sdk.sitemap.addResponseViewMode(responseViewModeOptions);
       } else {
-        sdk.sitemap.addRequestViewMode(viewModeOptions);
+        sdk.sitemap.addRequestViewMode(requestViewModeOptions);
       }
       break;
     }
     case "automate": {
       if (isResponse) {
-        sdk.automate.addResponseViewMode(viewModeOptions);
+        sdk.automate.addResponseViewMode(responseViewModeOptions);
       } else {
-        sdk.automate.addRequestViewMode(viewModeOptions);
+        sdk.automate.addRequestViewMode(requestViewModeOptions);
       }
       break;
     }
     case "intercept": {
       if (isResponse) {
-        sdk.intercept.addResponseViewMode(viewModeOptions);
+        sdk.intercept.addResponseViewMode(responseViewModeOptions);
       } else {
-        sdk.intercept.addRequestViewMode(viewModeOptions);
+        sdk.intercept.addRequestViewMode(requestViewModeOptions);
       }
       break;
     }

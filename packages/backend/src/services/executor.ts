@@ -27,8 +27,6 @@ function extractInput(
         : "";
     case "response.raw":
       return response?.getRaw().toText() ?? "";
-    case "request-response":
-      return `=== REQUEST ===\n${request.getRaw().toText()}\n\n=== RESPONSE ===\n${response?.getRaw().toText() ?? ""}`;
     default:
       return "";
   }
@@ -74,7 +72,7 @@ export async function getInputData(
 
   if (pane.httpql !== undefined && pane.httpql.trim() !== "") {
     const httpqlMatches = matchesHttpql(pane.httpql, request, response);
-    if (Boolean(httpqlMatches) === false) {
+    if (httpqlMatches === false) {
       return error("Request does not match HTTPQL filter");
     }
   }

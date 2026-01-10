@@ -1,75 +1,135 @@
-import type { RequestFull } from "@caido/sdk-frontend";
+import type { RequestFull, ResponseFull } from "@caido/sdk-frontend";
 import { isResponseInput } from "shared";
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, toValue, watch } from "vue";
 
 import { usePanesStore } from "@/stores/panes";
 import type { FrontendSDK } from "@/types";
-
-type SDKWithWorkflows = FrontendSDK & {
-  workflows: {
-    run: (workflowId: string, input: string) => Promise<string>;
-  };
-};
-
-type Response = {
-  getBody?: () => { toText?: () => string } | undefined;
-  getRaw?: () => { toText?: () => string };
-  getHeaders?: () => Record<string, string[]>;
-  getId?: () => string;
-};
 
 type ViewModeState =
   | { type: "Loading" }
   | { type: "Success"; output: string }
   | { type: "Failed"; error: string };
 
-function extractResponseInput(
-  response: unknown,
-  inputType: "response.body" | "response.headers" | "response.raw",
-): string {
-  const resp = response as Response;
+type UseViewModeOptions = {
+  paneId: () => string | undefined;
+  sdk: () => FrontendSDK;
+  request?: () => RequestFull | undefined;
+  response?: () => ResponseFull | undefined;
+};
 
-  try {
-    switch (inputType) {
-      case "response.body":
-        return resp.getBody?.()?.toText?.() ?? "";
-      case "response.headers": {
-        const headers = resp.getHeaders?.();
-        return headers ? JSON.stringify(headers, null, 2) : "";
-      }
-      case "response.raw":
-        return resp.getRaw?.()?.toText?.() ?? "";
-      default:
-        return "";
+const resultCache = new Map<string, { output: string; timestamp: number }>();
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
+function getCacheKey(paneId: string, requestId: string): string {
+  return `${paneId}:${requestId}`;
+}
+
+function getCachedResult(
+  paneId: string,
+  requestId: string,
+): string | undefined {
+  const key = getCacheKey(paneId, requestId);
+  const cached = resultCache.get(key);
+
+  if (cached === undefined) return undefined;
+
+  if (Date.now() - cached.timestamp > CACHE_TTL_MS) {
+    resultCache.delete(key);
+    return undefined;
+  }
+
+  return cached.output;
+}
+
+function setCachedResult(
+  paneId: string,
+  requestId: string,
+  output: string,
+): void {
+  const key = getCacheKey(paneId, requestId);
+  resultCache.set(key, { output, timestamp: Date.now() });
+
+  if (resultCache.size > 1000) {
+    const oldestKey = resultCache.keys().next().value;
+    if (oldestKey !== undefined) {
+      resultCache.delete(oldestKey);
     }
-  } catch (e) {
-    return `Error extracting ${inputType}: ${e instanceof Error ? e.message : String(e)}`;
   }
 }
 
-export const useViewMode = (
-  paneId: string,
-  sdk: FrontendSDK,
-  request: RequestFull | undefined,
-  response?: unknown,
-) => {
-  const store = usePanesStore();
+function extractResponseInput(
+  response: ResponseFull,
+  inputType: "response.body" | "response.headers" | "response.raw",
+): string {
+  switch (inputType) {
+    case "response.body": {
+      const raw = response.raw;
+      const bodyStart = raw.indexOf("\r\n\r\n");
+      if (bodyStart === -1) return "";
+      return raw.substring(bodyStart + 4);
+    }
+    case "response.headers": {
+      const raw = response.raw;
+      const headerEnd = raw.indexOf("\r\n\r\n");
+      if (headerEnd === -1) return "";
+      const headerLines = raw.substring(0, headerEnd).split("\r\n");
+      const headers: Record<string, string[]> = {};
+      for (let i = 1; i < headerLines.length; i++) {
+        const line = headerLines[i];
+        if (line === undefined) continue;
+        const colonIndex = line.indexOf(":");
+        if (colonIndex === -1) continue;
+        const key = line.substring(0, colonIndex).trim().toLowerCase();
+        const value = line.substring(colonIndex + 1).trim();
+        if (headers[key] === undefined) {
+          headers[key] = [];
+        }
+        headers[key].push(value);
+      }
+      return JSON.stringify(headers, null, 2);
+    }
+    case "response.raw":
+      return response.raw;
+    default:
+      return "";
+  }
+}
 
+export const useViewMode = (options: UseViewModeOptions) => {
+  const store = usePanesStore();
   const state = ref<ViewModeState>({ type: "Loading" });
 
   const execute = async () => {
     state.value = { type: "Loading" };
 
-    const pane = store.getPaneById(paneId);
+    const paneIdValue = toValue(options.paneId);
+    if (paneIdValue === undefined) {
+      state.value = { type: "Failed", error: "Pane ID not provided." };
+      return;
+    }
+
+    const pane = store.getPaneById(paneIdValue);
     if (pane === undefined) {
       state.value = { type: "Failed", error: "Pane not found." };
       return;
     }
 
-    const isResponseOnly =
-      isResponseInput(pane.input) && pane.input !== "request-response";
+    const sdk = toValue(options.sdk);
+    const isResponseOnly = isResponseInput(pane.input);
 
-    if (isResponseOnly && response !== undefined) {
+    if (isResponseOnly) {
+      const response = toValue(options.response);
+      if (response === undefined) {
+        state.value = { type: "Failed", error: "Response not available." };
+        return;
+      }
+
+      const cachedOutput = getCachedResult(paneIdValue, response.id);
+      if (cachedOutput !== undefined) {
+        state.value = { type: "Success", output: cachedOutput };
+        return;
+      }
+
       const input = extractResponseInput(
         response,
         pane.input as "response.body" | "response.headers" | "response.raw",
@@ -78,10 +138,6 @@ export const useViewMode = (
       if (input === "") {
         state.value = { type: "Failed", error: "No response data available." };
         return;
-      }
-
-      if (pane.httpql !== undefined && pane.httpql.trim() !== "") {
-        // HTTPQL filtering requires requestId which is not available in response-only view modes
       }
 
       if (pane.transformation.type === "command") {
@@ -93,44 +149,34 @@ export const useViewMode = (
         return;
       }
 
-      try {
-        const workflowResult = await (
-          sdk as unknown as SDKWithWorkflows
-        ).workflows.run(pane.transformation.workflowId, input);
-        state.value = { type: "Success", output: workflowResult };
-      } catch (e) {
-        state.value = {
-          type: "Failed",
-          error: `Workflow error: ${e instanceof Error ? e.message : String(e)}`,
-        };
+      const result = await sdk.backend.runWorkflow(
+        pane.transformation.workflowId,
+        input,
+      );
+
+      if (result.kind === "Error") {
+        state.value = { type: "Failed", error: result.error };
+        return;
       }
 
+      setCachedResult(paneIdValue, response.id, result.value);
+      state.value = { type: "Success", output: result.value };
       return;
     }
 
-    let requestId: string | undefined;
-    if (request?.id !== undefined) {
-      requestId = request.id;
-    } else if (response !== undefined) {
-      requestId =
-        (response as unknown as { requestId?: string })?.requestId ??
-        (response as unknown as { request?: { id?: string } })?.request?.id;
-    }
-
-    if (requestId === undefined) {
-      if (pane.input === "request-response") {
-        state.value = {
-          type: "Failed",
-          error:
-            "Request-response input requires request context. Use a request view mode instead.",
-        };
-      } else {
-        state.value = { type: "Failed", error: "Request ID not available." };
-      }
+    const request = toValue(options.request);
+    if (request === undefined) {
+      state.value = { type: "Failed", error: "Request not available." };
       return;
     }
 
-    const result = await sdk.backend.getPaneInputData(paneId, requestId);
+    const cachedOutput = getCachedResult(paneIdValue, request.id);
+    if (cachedOutput !== undefined) {
+      state.value = { type: "Success", output: cachedOutput };
+      return;
+    }
+
+    const result = await sdk.backend.getPaneInputData(paneIdValue, request.id);
 
     if (result.kind === "Error") {
       state.value = { type: "Failed", error: result.error };
@@ -148,17 +194,18 @@ export const useViewMode = (
       return;
     }
 
-    try {
-      const workflowResult = await (
-        sdk as unknown as SDKWithWorkflows
-      ).workflows.run(transformation.workflowId, input);
-      state.value = { type: "Success", output: workflowResult };
-    } catch (e) {
-      state.value = {
-        type: "Failed",
-        error: `Workflow error: ${e instanceof Error ? e.message : String(e)}`,
-      };
+    const workflowResult = await sdk.backend.runWorkflow(
+      transformation.workflowId,
+      input,
+    );
+
+    if (workflowResult.kind === "Error") {
+      state.value = { type: "Failed", error: workflowResult.error };
+      return;
     }
+
+    setCachedResult(paneIdValue, request.id, workflowResult.value);
+    state.value = { type: "Success", output: workflowResult.value };
   };
 
   onMounted(() => {
@@ -167,14 +214,14 @@ export const useViewMode = (
 
   watch(
     () => {
-      const pane = store.getPaneById(paneId);
-      if (
-        pane &&
-        isResponseInput(pane.input) &&
-        pane.input !== "request-response"
-      ) {
-        return (response as Response)?.getId?.() ?? "";
+      const paneIdValue = toValue(options.paneId);
+      if (paneIdValue === undefined) return "";
+      const pane = store.getPaneById(paneIdValue);
+      if (pane && isResponseInput(pane.input)) {
+        const response = toValue(options.response);
+        return response?.id ?? "";
       }
+      const request = toValue(options.request);
       return request?.id ?? "";
     },
     () => {
@@ -184,7 +231,12 @@ export const useViewMode = (
 
   return {
     state,
-    pane: store.getPaneById(paneId),
+    pane: computed(() => {
+      const paneIdValue = toValue(options.paneId);
+      return paneIdValue !== undefined
+        ? store.getPaneById(paneIdValue)
+        : undefined;
+    }),
     execute,
   };
 };

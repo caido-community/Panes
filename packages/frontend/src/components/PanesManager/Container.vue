@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import Button from "primevue/button";
 import Card from "primevue/card";
+import { ref } from "vue";
 
+import ExportImportDialog from "./ExportImportDialog.vue";
 import PaneEditor from "./PaneEditor.vue";
 import PanesList from "./PanesList.vue";
 import { useForm } from "./useForm";
@@ -25,6 +28,9 @@ const {
   savePane,
   deletePane,
 } = useForm();
+
+const showExportDialog = ref(false);
+const showImportDialog = ref(false);
 </script>
 
 <template>
@@ -42,6 +48,26 @@ const {
           @select="selectPane"
           @create="startCreate"
         />
+        <div class="p-3 border-t border-surface-700 flex gap-2">
+          <Button
+            label="Export"
+            icon="fas fa-download"
+            severity="secondary"
+            outlined
+            size="small"
+            class="flex-1"
+            @click="showExportDialog = true"
+          />
+          <Button
+            label="Import"
+            icon="fas fa-upload"
+            severity="secondary"
+            outlined
+            size="small"
+            class="flex-1"
+            @click="showImportDialog = true"
+          />
+        </div>
       </template>
     </Card>
 
@@ -73,5 +99,8 @@ const {
         />
       </template>
     </Card>
+
+    <ExportImportDialog v-model:visible="showExportDialog" mode="export" />
+    <ExportImportDialog v-model:visible="showImportDialog" mode="import" />
   </div>
 </template>
