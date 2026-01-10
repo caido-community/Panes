@@ -55,30 +55,61 @@ export function expandVariables(
 
   const variables: Record<string, string> = {
     "{{input}}": input,
+    "{{ input }}": input,
     "{{requestId}}": requestId,
+    "{{ requestId }}": requestId,
     "{{host}}": request.getHost(),
+    "{{ host }}": request.getHost(),
     "{{port}}": String(request.getPort()),
+    "{{ port }}": String(request.getPort()),
     "{{path}}": request.getPath(),
+    "{{ path }}": request.getPath(),
     "{{method}}": request.getMethod(),
+    "{{ method }}": request.getMethod(),
     "{{url}}": request.getUrl(),
+    "{{ url }}": request.getUrl(),
     "{{scheme}}": request.getTls() ? "https" : "http",
+    "{{ scheme }}": request.getTls() ? "https" : "http",
     "{{query}}": request.getQuery(),
+    "{{ query }}": request.getQuery(),
   };
 
   if (response !== undefined) {
-    variables["{{responseCode}}"] = String(response.getCode());
-    const rawLength = response.getRaw().toText().length;
-    variables["{{responseLength}}"] = String(rawLength);
+    const responseCode = String(response.getCode());
+    const rawLength = String(response.getRaw().toText().length);
+    variables["{{responseCode}}"] = responseCode;
+    variables["{{ responseCode }}"] = responseCode;
+    variables["{{responseLength}}"] = rawLength;
+    variables["{{ responseLength }}"] = rawLength;
   }
 
   let expanded = command;
+
   for (const [key, value] of Object.entries(variables)) {
-    expanded = expanded.replaceAll(key, escapeForShell(value));
+    if (expanded.includes(key)) {
+      expanded = expanded.replaceAll(key, escapeForShell(value));
+    }
+  }
+
+  const remainingVariables = expanded.match(/\{\{[^}]+\}\}/g);
+  if (remainingVariables !== null && remainingVariables.length > 0) {
+    const uniqueVars = [...new Set(remainingVariables)];
+    const availableVars = Object.keys(variables)
+      .filter((k) => !k.includes(" "))
+      .join(", ");
+    throw new Error(
+      `Unknown variables found: ${uniqueVars.join(", ")}. Available variables: ${availableVars}`,
+    );
   }
 
   return expanded;
 }
 
 function escapeForShell(arg: string): string {
-  return arg.replace(/'/g, "'\\''");
+  if (arg === "") {
+    return "''";
+  }
+
+  const escaped = arg.replace(/'/g, "'\\''");
+  return `'${escaped}'`;
 }

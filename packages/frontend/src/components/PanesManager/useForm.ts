@@ -23,6 +23,8 @@ const getDefaultFormData = (): PaneFormData => ({
   workflowId: "",
   command: "",
   timeout: 30,
+  codeBlock: false,
+  language: "json",
 });
 
 export const useForm = () => {
@@ -93,6 +95,8 @@ export const useForm = () => {
         pane.transformation.type === "command"
           ? (pane.transformation.timeout ?? 30)
           : 30,
+      codeBlock: pane.codeBlock ?? false,
+      language: pane.language ?? "json",
     };
     isCreating.value = false;
   });
@@ -140,6 +144,8 @@ export const useForm = () => {
         data.transformationType === "workflow"
           ? { type: "workflow", workflowId: data.workflowId }
           : { type: "command", command: data.command, timeout: data.timeout },
+      codeBlock: data.codeBlock || undefined,
+      language: data.codeBlock ? data.language : undefined,
     };
   };
 
@@ -189,7 +195,7 @@ export const useForm = () => {
   const transformationOptions: { label: string; value: TransformationType }[] =
     [
       { label: "Workflow", value: "workflow" },
-      { label: "Shell Command (Not Supported)", value: "command" },
+      { label: "Shell Command", value: "command" },
     ];
 
   const workflowOptions = computed(() =>

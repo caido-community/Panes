@@ -53,6 +53,21 @@ const toggleLocation = (location: PaneLocation) => {
 const isLocationSelected = (location: PaneLocation) => {
   return form.value.locations.includes(location);
 };
+
+const languageOptions = [
+  { label: "JSON", value: "json" },
+  { label: "JavaScript", value: "javascript" },
+  { label: "TypeScript", value: "typescript" },
+  { label: "HTML", value: "html" },
+  { label: "XML", value: "xml" },
+  { label: "CSS", value: "css" },
+  { label: "Python", value: "python" },
+  { label: "Bash", value: "bash" },
+  { label: "SQL", value: "sql" },
+  { label: "YAML", value: "yaml" },
+  { label: "Markdown", value: "markdown" },
+  { label: "Plain Text", value: "text" },
+];
 </script>
 
 <template>
@@ -269,6 +284,33 @@ const isLocationSelected = (location: PaneLocation) => {
         <p v-else class="text-xs text-surface-400">
           Select a Convert workflow to transform the input
         </p>
+      </div>
+    </div>
+
+    <div class="space-y-3 border border-surface-700 rounded p-4">
+      <div class="flex items-center gap-2">
+        <Checkbox
+          :model-value="form.codeBlock"
+          binary
+          @update:model-value="updateField('codeBlock', $event)"
+        />
+        <label class="text-sm font-medium cursor-pointer">Code Block</label>
+      </div>
+      <p class="text-xs text-surface-400">
+        Enable syntax highlighting for the output
+      </p>
+
+      <div v-if="form.codeBlock" class="space-y-2">
+        <label class="text-sm font-medium">Language *</label>
+        <Select
+          :model-value="form.language"
+          :options="languageOptions"
+          option-label="label"
+          option-value="value"
+          class="w-full"
+          placeholder="Select language"
+          @update:model-value="updateField('language', $event)"
+        />
       </div>
     </div>
 

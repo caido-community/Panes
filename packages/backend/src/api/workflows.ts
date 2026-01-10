@@ -1,7 +1,10 @@
+import { spawn } from "child_process";
+
 import type { Result, WorkflowInfo, WorkflowValidationResult } from "shared";
 import { error, ok } from "shared";
 
 import { requireSDK } from "../sdk";
+import { expandVariables } from "../services/variable-expander";
 import { panesStore } from "../stores/panes";
 import type { BackendSDK } from "../types";
 
@@ -225,4 +228,102 @@ export async function validateWorkflows(
   }
 
   return ok(results);
+}
+
+async function driveChild(
+  child: ReturnType<typeof spawn>,
+  timeoutMs: number,
+): Promise<string> {
+  let output = "";
+  if (child.stdout !== null) {
+    child.stdout.on("data", (data) => {
+      output += data.toString();
+    });
+  }
+
+  let errorOutput = "";
+  if (child.stderr !== null) {
+    child.stderr.on("data", (data) => {
+      errorOutput += data.toString();
+    });
+  }
+
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => {
+      child.kill();
+      reject(new Error(`Command timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+  });
+
+  const exitPromise = new Promise<number>((resolve) => {
+    child.on("close", resolve);
+  });
+
+  const exitCode = await Promise.race([exitPromise, timeoutPromise]);
+
+  if (exitCode !== 0) {
+    throw new Error(
+      `Command failed with exit code ${exitCode}${errorOutput ? `: ${errorOutput}` : ""}`,
+    );
+  }
+
+  return output;
+}
+
+export async function runCommand(
+  _sdk: BackendSDK,
+  command: string,
+  input: string,
+  timeout: number,
+  requestId: string,
+): Promise<Result<string>> {
+  const sdk = requireSDK();
+
+  const requestResult = await sdk.requests.get(requestId);
+  if (requestResult === undefined) {
+    return error("Request not found");
+  }
+
+  const { request, response } = requestResult;
+
+  let expandedCommand: string;
+  try {
+    expandedCommand = expandVariables(command, {
+      input,
+      request,
+      response,
+      requestId,
+    });
+  } catch (err) {
+    return error(
+      err instanceof Error
+        ? err.message
+        : `Variable expansion failed: ${String(err)}`,
+    );
+  }
+
+  const timeoutMs = Math.max(0, Math.min(86400000, timeout * 1000));
+
+  try {
+    const child = spawn(expandedCommand, [], {
+      shell: true,
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+
+    if (child.stdin !== null) {
+      child.stdin.write(input);
+      child.stdin.end();
+    } else {
+      return error("Failed to open stdin for command execution");
+    }
+
+    const output = await driveChild(child, timeoutMs);
+    return ok(output.trim());
+  } catch (err) {
+    return error(
+      err instanceof Error
+        ? err.message
+        : `Command execution failed: ${String(err)}`,
+    );
+  }
 }

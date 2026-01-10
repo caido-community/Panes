@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import type { API, ResponseFull } from "@caido/sdk-frontend";
 import ProgressSpinner from "primevue/progressspinner";
+import { computed } from "vue";
 
+import CodeMirrorView from "./CodeMirrorView.vue";
 import { useViewMode } from "./useViewMode";
 
+import { usePanesStore } from "@/stores/panes";
 import type { FrontendSDK } from "@/types";
 
 const { paneId, sdk, response } = defineProps<{
@@ -12,10 +15,16 @@ const { paneId, sdk, response } = defineProps<{
   response: ResponseFull;
 }>();
 
+const store = usePanesStore();
 const { state } = useViewMode({
   paneId: () => paneId,
   sdk: () => sdk as unknown as FrontendSDK,
   response: () => response,
+});
+
+const pane = computed(() => {
+  if (paneId === undefined) return undefined;
+  return store.getPaneById(paneId);
 });
 </script>
 
@@ -36,15 +45,23 @@ const { state } = useViewMode({
       <p class="text-surface-300 text-sm max-w-md">{{ state.error }}</p>
     </div>
 
-    <div
-      v-else-if="state.type === 'Success'"
-      class="h-full w-full overflow-auto p-4"
-    >
-      <div
-        class="text-sm font-mono whitespace-pre-wrap break-words break-all overflow-wrap-anywhere"
-        style="word-break: break-all; overflow-wrap: anywhere"
-      >
-        {{ state.output }}
+    <div v-else-if="state.type === 'Success'" class="h-full w-full">
+      <CodeMirrorView
+        v-if="pane?.codeBlock === true && pane.language"
+        :content="state.output"
+        :language="pane.language"
+      />
+      <div v-else class="h-full w-full overflow-auto p-4">
+        <div
+          class="text-sm font-mono whitespace-pre-wrap break-words break-all overflow-wrap-anywhere select-text"
+          style="
+            word-break: break-all;
+            overflow-wrap: anywhere;
+            user-select: text;
+          "
+        >
+          {{ state.output }}
+        </div>
       </div>
     </div>
   </div>

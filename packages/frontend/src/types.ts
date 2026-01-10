@@ -19,4 +19,14 @@ export type FrontendSDK = Caido<API, BackendEvents> & {
   sitemap: Caido<API, BackendEvents>["sitemap"] & ResponseViewModeSDK;
   automate: Caido<API, BackendEvents>["automate"] & ResponseViewModeSDK;
   intercept: Caido<API, BackendEvents>["intercept"] & ResponseViewModeSDK;
+  backend: Caido<API, BackendEvents>["backend"] & {
+    runCommand: (
+      command: string,
+      input: string,
+      timeout: number,
+      requestId: string,
+    ) => Promise<
+      { kind: "Success"; value: string } | { kind: "Error"; error: string }
+    >;
+  };
 };

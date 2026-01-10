@@ -6,7 +6,9 @@ import {
   exportPanes,
   getPane,
   getPanes,
+  getTemplates,
   importPanes,
+  installTemplate,
   togglePane,
   updatePane,
 } from "./api/panes";
@@ -14,6 +16,7 @@ import { getActivePanesForLocation, getPaneInputData } from "./api/transform";
 import {
   getConvertWorkflows,
   getWorkflows,
+  runCommand,
   runWorkflow,
   validateWorkflows,
 } from "./api/workflows";
@@ -37,13 +40,17 @@ export type API = DefineAPI<{
   getWorkflows: typeof getWorkflows;
   getConvertWorkflows: typeof getConvertWorkflows;
   runWorkflow: typeof runWorkflow;
+  runCommand: typeof runCommand;
   validateWorkflows: typeof validateWorkflows;
+  getTemplates: typeof getTemplates;
+  installTemplate: typeof installTemplate;
 }>;
 
-export function init(sdk: BackendSDK) {
+export async function init(sdk: BackendSDK) {
   setSDK(sdk);
 
-  panesStore.initialize();
+  await panesStore.initialize();
+  panesStore.ensureTemplatesInstalled();
 
   sdk.api.register("getPanes", getPanes);
   sdk.api.register("getPane", getPane);
@@ -58,7 +65,10 @@ export function init(sdk: BackendSDK) {
   sdk.api.register("getWorkflows", getWorkflows);
   sdk.api.register("getConvertWorkflows", getConvertWorkflows);
   sdk.api.register("runWorkflow", runWorkflow);
+  sdk.api.register("runCommand", runCommand);
   sdk.api.register("validateWorkflows", validateWorkflows);
+  sdk.api.register("getTemplates", getTemplates);
+  sdk.api.register("installTemplate", installTemplate);
 
   sdk.events.onProjectChange(async (_, project) => {
     const projectId = project?.getId();

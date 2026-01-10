@@ -1,5 +1,11 @@
-import type { ImportResult, Pane, PanesExport, Result } from "shared";
-import { error, ok } from "shared";
+import type {
+  ImportResult,
+  Pane,
+  PanesExport,
+  PaneTemplate,
+  Result,
+} from "shared";
+import { error, getAllTemplates, ok } from "shared";
 
 import { panesStore } from "../stores/panes";
 import type { BackendSDK } from "../types";
@@ -80,6 +86,9 @@ export function exportPanes(
       httpql: p.httpql,
       locations: p.locations,
       transformation: p.transformation,
+      codeBlock: p.codeBlock,
+      language: p.language,
+      templateId: p.templateId,
     })),
   };
 
@@ -117,4 +126,19 @@ export function importPanes(
   }
 
   return ok(results);
+}
+
+export function getTemplates(_sdk: BackendSDK): Result<PaneTemplate[]> {
+  return ok(getAllTemplates());
+}
+
+export function installTemplate(
+  _sdk: BackendSDK,
+  templateId: string,
+): Result<Pane> {
+  const pane = panesStore.installTemplate(templateId);
+  if (pane === undefined) {
+    return error("Template not found");
+  }
+  return ok(pane);
 }

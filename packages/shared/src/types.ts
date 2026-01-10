@@ -39,6 +39,9 @@ export type Pane = {
   transformation: WorkflowTransformation | CommandTransformation;
   createdAt: number;
   updatedAt: number;
+  templateId?: string;
+  codeBlock?: boolean;
+  language?: string;
 };
 
 export type CreatePaneInput = Omit<Pane, "id" | "createdAt" | "updatedAt">;
@@ -57,6 +60,8 @@ export type PaneFormData = {
   workflowId: string;
   command: string;
   timeout: number;
+  codeBlock: boolean;
+  language: string;
 };
 
 export type PanesConfig = {

@@ -141,11 +141,35 @@ export const useViewMode = (options: UseViewModeOptions) => {
       }
 
       if (pane.transformation.type === "command") {
-        state.value = {
-          type: "Failed",
-          error:
-            "Shell commands are not supported. Please use a Convert workflow.",
-        };
+        const input = extractResponseInput(
+          response,
+          pane.input as "response.body" | "response.headers" | "response.raw",
+        );
+
+        if (input === "") {
+          state.value = {
+            type: "Failed",
+            error: "No response data available.",
+          };
+          return;
+        }
+
+        const requestId = response.id;
+
+        const commandResult = await sdk.backend.runCommand(
+          pane.transformation.command,
+          input,
+          pane.transformation.timeout ?? 30,
+          requestId,
+        );
+
+        if (commandResult.kind === "Error") {
+          state.value = { type: "Failed", error: commandResult.error };
+          return;
+        }
+
+        setCachedResult(paneIdValue, response.id, commandResult.value);
+        state.value = { type: "Success", output: commandResult.value };
         return;
       }
 
@@ -186,11 +210,26 @@ export const useViewMode = (options: UseViewModeOptions) => {
     const { input, transformation } = result.value;
 
     if (transformation.type === "command") {
-      state.value = {
-        type: "Failed",
-        error:
-          "Shell commands are not supported. Please use a Convert workflow.",
-      };
+      const pane = store.getPaneById(paneIdValue);
+      const timeout =
+        pane?.transformation.type === "command"
+          ? (pane.transformation.timeout ?? 30)
+          : 30;
+
+      const commandResult = await sdk.backend.runCommand(
+        transformation.command,
+        input,
+        timeout,
+        request.id,
+      );
+
+      if (commandResult.kind === "Error") {
+        state.value = { type: "Failed", error: commandResult.error };
+        return;
+      }
+
+      setCachedResult(paneIdValue, request.id, commandResult.value);
+      state.value = { type: "Success", output: commandResult.value };
       return;
     }
 

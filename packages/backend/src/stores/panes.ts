@@ -4,15 +4,14 @@ import type {
   PanesConfig,
   UpdatePaneInput,
 } from "shared";
+import { getAllTemplates } from "shared";
 
 import { requireSDK } from "../sdk";
 import { generateId } from "../utils";
 
 import { ProjectScopedStore } from "./project-store";
 
-const DEFAULT_PANES: CreatePaneInput[] = [];
-
-function createPane(data: CreatePaneInput): Pane {
+function createPane(data: CreatePaneInput & { templateId?: string }): Pane {
   const now = Date.now();
   return {
     ...data,
@@ -30,8 +29,60 @@ class PanesStore extends ProjectScopedStore<PanesConfig> {
   protected getDefaultData(): PanesConfig {
     return {
       version: 1,
-      panes: DEFAULT_PANES.map(createPane),
+      panes: [],
     };
+  }
+
+  ensureTemplatesInstalled(): void {
+    const templates = getAllTemplates();
+    const existingTemplateIds = new Set(
+      this.data.panes
+        .filter((p) => p.templateId !== undefined)
+        .map((p) => p.templateId as string),
+    );
+
+    for (const template of templates) {
+      if (existingTemplateIds.has(template.templateId)) {
+        continue;
+      }
+
+      const { templateId, ...paneData } = template;
+      const pane = createPane({ ...paneData, templateId });
+      this.data.panes.push(pane);
+    }
+
+    if (templates.length > existingTemplateIds.size) {
+      this.notify();
+      this.saveToFile();
+    }
+  }
+
+  getTemplatePanes(): Pane[] {
+    return this.data.panes.filter((p) => p.templateId !== undefined);
+  }
+
+  getCustomPanes(): Pane[] {
+    return this.data.panes.filter((p) => p.templateId === undefined);
+  }
+
+  installTemplate(templateId: string): Pane | undefined {
+    const templates = getAllTemplates();
+    const template = templates.find((t) => t.templateId === templateId);
+    if (template === undefined) return undefined;
+
+    const existing = this.data.panes.find((p) => p.templateId === templateId);
+    if (existing !== undefined) return existing;
+
+    const { templateId: tid, ...paneData } = template;
+    const pane = createPane({ ...paneData, templateId: tid });
+    this.data.panes.push(pane);
+    this.notify();
+    this.saveToFile();
+
+    const sdk = requireSDK();
+    sdk.api.send("pane:created", pane);
+
+    return pane;
   }
 
   getPanes(): Pane[] {
