@@ -21,15 +21,15 @@ export default defineConfig({
   plugins: [
     {
       kind: "backend",
-      id: "backend",
+      id: "panes-backend",
       root: "packages/backend",
     },
     {
       kind: 'frontend',
-      id: "frontend",
+      id: "panes-frontend",
       root: 'packages/frontend',
       backend: {
-        id: "backend",
+        id: "panes-backend",
       },
       vite: {
         plugins: [vue()],
