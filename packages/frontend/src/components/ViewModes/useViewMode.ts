@@ -141,26 +141,11 @@ export const useViewMode = (options: UseViewModeOptions) => {
       }
 
       if (pane.transformation.type === "command") {
-        const input = extractResponseInput(
-          response,
-          pane.input as "response.body" | "response.headers" | "response.raw",
-        );
-
-        if (input === "") {
-          state.value = {
-            type: "Failed",
-            error: "No response data available.",
-          };
-          return;
-        }
-
-        const requestId = response.id;
-
         const commandResult = await sdk.backend.runCommand(
           pane.transformation.command,
           input,
           pane.transformation.timeout ?? 30,
-          requestId,
+          response.id,
         );
 
         if (commandResult.kind === "Error") {

@@ -12,7 +12,7 @@ export default defineConfig({
   id,
   name: "Panes",
   description: "Custom view modes for HTTP requests and responses",
-  version: "0.0.1",
+  version: "1.0.0",
   author: {
     name: "Caido Labs Inc.",
     email: "dev@caido.io",
@@ -34,31 +34,10 @@ export default defineConfig({
       vite: {
         plugins: [vue()],
         build: {
-          rollupOptions: {
+  rollupOptions: {
             external: [
-              '@caido/frontend-sdk', 
-              "@codemirror/autocomplete", 
-              "@codemirror/commands", 
-              "@codemirror/lang-css",
-              "@codemirror/lang-html",
-              "@codemirror/lang-javascript",
-              "@codemirror/lang-json",
-              "@codemirror/lang-markdown",
-              "@codemirror/lang-python",
-              "@codemirror/lang-sql",
-              "@codemirror/lang-xml",
-              "@codemirror/lang-yaml",
-              "@codemirror/language", 
-              "@codemirror/lint", 
-              "@codemirror/search", 
-              "@codemirror/state", 
-              "@codemirror/theme-one-dark",
-              "@codemirror/view", 
-              "@lezer/common", 
-              "@lezer/highlight", 
-              "@lezer/lr",
+              '@caido/frontend-sdk',
               "vue",
-
             ]
           }
         },

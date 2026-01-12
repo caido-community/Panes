@@ -71,6 +71,7 @@ export const myTemplate: CreatePaneInput = {
   tabName: "MyTab",
   description: "Description of what this template does",
   enabled: false,
+  scope: "global",
   input: "response.body",
   locations: ["http-history", "replay"],
   transformation: {

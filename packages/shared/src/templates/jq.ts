@@ -6,6 +6,7 @@ export const jqTemplate: CreatePaneInput = {
   description:
     "Process and format JSON using jq. Example: jq '.key' or jq '.' for pretty print",
   enabled: false,
+  scope: "global",
   input: "response.body",
   locations: ["http-history", "replay", "sitemap", "automate", "intercept"],
   transformation: {

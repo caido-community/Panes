@@ -8,8 +8,12 @@ import { getActivePanesForLocation } from "./transform";
 describe("transform API", () => {
   beforeEach(() => {
     setupMockSDK();
-    panesStore["data"] = { version: 1, panes: [] };
-    panesStore["saveToFile"] = vi.fn();
+    panesStore["globalData"] = { version: 1, panes: [] };
+    panesStore["projectData"] = { version: 1, panes: [] };
+    panesStore["initialized"] = true;
+    panesStore["currentProjectId"] = "test-project-id";
+    panesStore["saveGlobalPanes"] = vi.fn().mockResolvedValue(undefined);
+    panesStore["saveProjectPanes"] = vi.fn().mockResolvedValue(undefined);
   });
 
   const mockSDK = {} as never;
@@ -24,10 +28,14 @@ describe("transform API", () => {
     });
 
     it("should return only enabled panes for location", () => {
+      panesStore["globalData"].panes = [];
+      panesStore["projectData"].panes = [];
+
       panesStore.createPane({
         name: "Enabled Pane",
         tabName: "Enabled",
         enabled: true,
+        scope: "project" as const,
         input: "response.body",
         locations: ["http-history"],
         transformation: {
@@ -41,6 +49,7 @@ describe("transform API", () => {
         name: "Disabled Pane",
         tabName: "Disabled",
         enabled: false,
+        scope: "project",
         input: "response.body",
         locations: ["http-history"],
         transformation: {
@@ -54,6 +63,7 @@ describe("transform API", () => {
         name: "Other Location",
         tabName: "Other",
         enabled: true,
+        scope: "project" as const,
         input: "response.body",
         locations: ["replay"],
         transformation: {
@@ -72,10 +82,14 @@ describe("transform API", () => {
     });
 
     it("should return panes for multiple locations", () => {
+      panesStore["globalData"].panes = [];
+      panesStore["projectData"].panes = [];
+
       panesStore.createPane({
         name: "Multi Location",
         tabName: "Multi",
         enabled: true,
+        scope: "project" as const,
         input: "response.body",
         locations: ["http-history", "replay", "sitemap"],
         transformation: {

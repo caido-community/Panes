@@ -3,6 +3,7 @@ import type {
   PaneFormData,
   PaneInput,
   PaneLocation,
+  PaneScope,
   TransformationType,
   WorkflowInfo,
 } from "shared";
@@ -16,6 +17,7 @@ const getDefaultFormData = (): PaneFormData => ({
   tabName: "",
   description: "",
   enabled: true,
+  scope: "project",
   input: "response.body",
   httpql: "",
   locations: ["http-history", "replay"],
@@ -79,6 +81,7 @@ export const useForm = () => {
       tabName: pane.tabName,
       description: pane.description ?? "",
       enabled: pane.enabled,
+      scope: pane.scope,
       input: pane.input,
       httpql: pane.httpql ?? "",
       locations: [...pane.locations],
@@ -137,6 +140,7 @@ export const useForm = () => {
       tabName: data.tabName.trim(),
       description: data.description.trim() || undefined,
       enabled: data.enabled,
+      scope: data.scope,
       input: data.input,
       httpql: data.httpql.trim() || undefined,
       locations: data.locations,
@@ -198,6 +202,11 @@ export const useForm = () => {
       { label: "Shell Command", value: "command" },
     ];
 
+  const scopeOptions: { label: string; value: PaneScope }[] = [
+    { label: "Global", value: "global" },
+    { label: "Project", value: "project" },
+  ];
+
   const workflowOptions = computed(() =>
     workflows.value.map((w) => ({
       label: w.name,
@@ -216,6 +225,7 @@ export const useForm = () => {
     inputOptions,
     locationOptions,
     transformationOptions,
+    scopeOptions,
     workflowOptions,
     workflowsLoading,
     workflowsError,

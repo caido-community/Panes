@@ -3,7 +3,7 @@ import { vi } from "vitest";
 import { setSDK } from "./sdk";
 import type { BackendSDK } from "./types";
 
-export function createMockSDK(): BackendSDK {
+function createMockSDK(): BackendSDK {
   return {
     api: {
       register: vi.fn(),

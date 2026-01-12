@@ -50,7 +50,7 @@ export async function init(sdk: BackendSDK) {
   setSDK(sdk);
 
   await panesStore.initialize();
-  panesStore.ensureTemplatesInstalled();
+  await panesStore.ensureTemplatesInstalled();
 
   sdk.api.register("getPanes", getPanes);
   sdk.api.register("getPane", getPane);

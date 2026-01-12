@@ -11,6 +11,7 @@ import type {
   PaneFormData,
   PaneInput,
   PaneLocation,
+  PaneScope,
   TransformationType,
 } from "shared";
 
@@ -22,6 +23,7 @@ defineProps<{
   inputOptions: { label: string; value: PaneInput }[];
   locationOptions: { label: string; value: PaneLocation }[];
   transformationOptions: { label: string; value: TransformationType }[];
+  scopeOptions: { label: string; value: PaneScope }[];
   workflowOptions: { label: string; value: string }[];
   workflowsLoading: boolean;
 }>();
@@ -119,6 +121,22 @@ const languageOptions = [
         class="w-full"
         @update:model-value="updateField('description', $event)"
       />
+    </div>
+
+    <div class="space-y-2">
+      <label class="text-sm font-medium">Scope *</label>
+      <SelectButton
+        :model-value="form.scope"
+        :options="scopeOptions"
+        option-label="label"
+        option-value="value"
+        class="w-full"
+        @update:model-value="updateField('scope', $event)"
+      />
+      <p class="text-xs text-surface-400">
+        Global panes are available across all projects. Project panes are only
+        available in the current project.
+      </p>
     </div>
 
     <div class="space-y-2">

@@ -82,6 +82,7 @@ export function exportPanes(
       tabName: p.tabName,
       description: p.description,
       enabled: p.enabled,
+      scope: p.scope,
       input: p.input,
       httpql: p.httpql,
       locations: p.locations,
@@ -107,22 +108,37 @@ export function importPanes(
   };
 
   for (const paneData of exportData.panes) {
-    const existing = panesStore
-      .getPanes()
-      .find((p) => p.name === paneData.name);
+    try {
+      const paneDataWithScope = {
+        ...paneData,
+        scope: paneData.scope ?? "project",
+      };
 
-    if (existing !== undefined) {
-      if (overwrite) {
-        panesStore.updatePane(existing.id, paneData);
-        results.created++;
-      } else {
-        results.skipped++;
+      const existing = panesStore
+        .getPanes()
+        .find((p) => p.name === paneDataWithScope.name);
+
+      if (existing !== undefined) {
+        if (overwrite) {
+          panesStore.updatePane(existing.id, paneDataWithScope);
+          results.created++;
+        } else {
+          results.skipped++;
+        }
+        continue;
       }
-      continue;
-    }
 
-    panesStore.createPane(paneData);
-    results.created++;
+      panesStore.createPane(paneDataWithScope);
+      results.created++;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : `Failed to import pane: ${String(err)}`;
+      results.errors.push(
+        `Pane "${paneData.name ?? "unknown"}": ${errorMessage}`,
+      );
+    }
   }
 
   return ok(results);

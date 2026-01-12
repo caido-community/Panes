@@ -17,9 +17,12 @@ import {
 describe("panes API", () => {
   beforeEach(() => {
     setupMockSDK();
-    panesStore["data"] = { version: 1, panes: [] };
-    panesStore["saveToFile"] = vi.fn();
-    panesStore["notify"]();
+    panesStore["globalData"] = { version: 1, panes: [] };
+    panesStore["projectData"] = { version: 1, panes: [] };
+    panesStore["initialized"] = true;
+    panesStore["currentProjectId"] = "test-project-id";
+    panesStore["saveGlobalPanes"] = vi.fn().mockResolvedValue(undefined);
+    panesStore["saveProjectPanes"] = vi.fn().mockResolvedValue(undefined);
   });
 
   const mockSDK = {} as never;
@@ -38,6 +41,7 @@ describe("panes API", () => {
         name: "Test Pane",
         tabName: "Test",
         enabled: true,
+        scope: "project" as const,
         input: "response.body" as const,
         locations: ["http-history" as const],
         transformation: {
@@ -72,6 +76,7 @@ describe("panes API", () => {
         name: "Test Pane",
         tabName: "Test",
         enabled: true,
+        scope: "project" as const,
         input: "response.body" as const,
         locations: ["http-history" as const],
         transformation: {
@@ -101,6 +106,7 @@ describe("panes API", () => {
         name: "New Pane",
         tabName: "New",
         enabled: false,
+        scope: "project" as const,
         input: "request.body" as const,
         locations: ["replay" as const],
         transformation: {
@@ -124,6 +130,7 @@ describe("panes API", () => {
         name: "Code Pane",
         tabName: "Code",
         enabled: true,
+        scope: "project" as const,
         input: "response.body" as const,
         locations: ["http-history" as const],
         transformation: {
@@ -150,6 +157,7 @@ describe("panes API", () => {
         name: "Original",
         tabName: "Orig",
         enabled: true,
+        scope: "project" as const,
         input: "response.body" as const,
         locations: ["http-history" as const],
         transformation: {
@@ -193,6 +201,7 @@ describe("panes API", () => {
         name: "To Delete",
         tabName: "Delete",
         enabled: true,
+        scope: "project" as const,
         input: "response.body" as const,
         locations: ["http-history" as const],
         transformation: {
@@ -226,10 +235,14 @@ describe("panes API", () => {
 
   describe("exportPanes", () => {
     it("should export all panes when no IDs specified", () => {
+      panesStore["globalData"].panes = [];
+      panesStore["projectData"].panes = [];
+
       createPane(mockSDK, {
         name: "Pane 1",
         tabName: "P1",
         enabled: true,
+        scope: "project" as const,
         input: "response.body" as const,
         locations: ["http-history" as const],
         transformation: {
@@ -243,6 +256,7 @@ describe("panes API", () => {
         name: "Pane 2",
         tabName: "P2",
         enabled: false,
+        scope: "project" as const,
         input: "request.body" as const,
         locations: ["replay" as const],
         transformation: {
@@ -265,6 +279,7 @@ describe("panes API", () => {
         name: "Pane 1",
         tabName: "P1",
         enabled: true,
+        scope: "project" as const,
         input: "response.body" as const,
         locations: ["http-history" as const],
         transformation: {
@@ -278,6 +293,7 @@ describe("panes API", () => {
         name: "Pane 2",
         tabName: "P2",
         enabled: false,
+        scope: "project" as const,
         input: "request.body" as const,
         locations: ["replay" as const],
         transformation: {
@@ -301,6 +317,7 @@ describe("panes API", () => {
         name: "Code Pane",
         tabName: "Code",
         enabled: true,
+        scope: "project" as const,
         input: "response.body" as const,
         locations: ["http-history" as const],
         transformation: {
@@ -325,6 +342,9 @@ describe("panes API", () => {
 
   describe("importPanes", () => {
     it("should import panes from export data", () => {
+      panesStore["globalData"].panes = [];
+      panesStore["projectData"].panes = [];
+
       const exportData: PanesExport = {
         version: 1,
         exportDate: Date.now(),
@@ -333,6 +353,7 @@ describe("panes API", () => {
             name: "Imported Pane",
             tabName: "Import",
             enabled: true,
+            scope: "project",
             input: "response.body",
             locations: ["http-history"],
             transformation: {
@@ -364,6 +385,7 @@ describe("panes API", () => {
         name: "Existing",
         tabName: "Exist",
         enabled: true,
+        scope: "project" as const,
         input: "response.body" as const,
         locations: ["http-history" as const],
         transformation: {
@@ -400,10 +422,14 @@ describe("panes API", () => {
     });
 
     it("should overwrite existing panes when overwrite is true", () => {
+      panesStore["globalData"].panes = [];
+      panesStore["projectData"].panes = [];
+
       const createResult = createPane(mockSDK, {
         name: "Existing",
         tabName: "Exist",
         enabled: true,
+        scope: "project" as const,
         input: "response.body" as const,
         locations: ["http-history" as const],
         transformation: {
@@ -421,6 +447,7 @@ describe("panes API", () => {
             name: "Existing",
             tabName: "Updated",
             enabled: false,
+            scope: "project",
             input: "request.body",
             locations: ["replay"],
             transformation: {

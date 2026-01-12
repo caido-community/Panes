@@ -4,6 +4,7 @@ import Checkbox from "primevue/checkbox";
 import Dialog from "primevue/dialog";
 import FileUpload from "primevue/fileupload";
 import type { FileUploadSelectEvent } from "primevue/fileupload";
+import Tag from "primevue/tag";
 import type { Pane, PanesExport } from "shared";
 import { computed, ref } from "vue";
 
@@ -100,7 +101,14 @@ const handleFileSelect = async (event: FileUploadSelectEvent) => {
 
   importFileName.value = file.name;
   const content = await file.text();
-  importData.value = JSON.parse(content) as PanesExport;
+
+  try {
+    importData.value = JSON.parse(content) as PanesExport;
+  } catch {
+    sdk.window.showToast("Invalid JSON file", { variant: "error" });
+    importData.value = undefined;
+    importFileName.value = "";
+  }
 };
 
 const handleImport = async () => {
@@ -183,7 +191,14 @@ const closeDialog = () => {
               @update:model-value="togglePane(pane)"
             />
             <div class="flex-1">
-              <div class="text-sm">{{ pane.name }}</div>
+              <div class="flex items-center gap-2">
+                <div class="text-sm">{{ pane.name }}</div>
+                <Tag
+                  :value="pane.scope === 'global' ? 'Global' : 'Project'"
+                  :severity="pane.scope === 'global' ? 'info' : 'secondary'"
+                  class="text-xs"
+                />
+              </div>
               <div class="text-xs text-surface-400">{{ pane.tabName }}</div>
             </div>
             <i
@@ -243,7 +258,14 @@ const closeDialog = () => {
           >
             <i class="fas fa-window-restore text-surface-400" />
             <div class="flex-1">
-              <div class="text-sm">{{ pane.name }}</div>
+              <div class="flex items-center gap-2">
+                <div class="text-sm">{{ pane.name }}</div>
+                <Tag
+                  :value="pane.scope === 'global' ? 'Global' : 'Project'"
+                  :severity="pane.scope === 'global' ? 'info' : 'secondary'"
+                  class="text-xs"
+                />
+              </div>
               <div class="text-xs text-surface-400">{{ pane.tabName }}</div>
             </div>
           </div>

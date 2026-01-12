@@ -20,6 +20,7 @@ const {
   inputOptions,
   locationOptions,
   transformationOptions,
+  scopeOptions,
   workflowOptions,
   workflowsLoading,
   selectPane,
@@ -85,6 +86,7 @@ const showImportDialog = ref(false);
           :input-options="inputOptions"
           :location-options="locationOptions"
           :transformation-options="transformationOptions"
+          :scope-options="scopeOptions"
           :workflow-options="workflowOptions"
           :workflows-loading="workflowsLoading"
           @save="savePane"

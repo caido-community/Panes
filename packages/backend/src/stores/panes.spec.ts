@@ -7,8 +7,12 @@ import { panesStore } from "./panes";
 describe("PanesStore", () => {
   beforeEach(() => {
     setupMockSDK();
-    panesStore["data"] = { version: 1, panes: [] };
-    panesStore["saveToFile"] = vi.fn();
+    panesStore["globalData"] = { version: 1, panes: [] };
+    panesStore["projectData"] = { version: 1, panes: [] };
+    panesStore["initialized"] = true;
+    panesStore["currentProjectId"] = "test-project-id";
+    panesStore["saveGlobalPanes"] = vi.fn().mockResolvedValue(undefined);
+    panesStore["saveProjectPanes"] = vi.fn().mockResolvedValue(undefined);
   });
 
   describe("getPanes", () => {
@@ -21,6 +25,7 @@ describe("PanesStore", () => {
         name: "Pane 1",
         tabName: "P1",
         enabled: true,
+        scope: "project" as const,
         input: "response.body",
         locations: ["http-history"],
         transformation: {
@@ -44,6 +49,7 @@ describe("PanesStore", () => {
         name: "Test Pane",
         tabName: "Test",
         enabled: true,
+        scope: "project" as const,
         input: "response.body",
         locations: ["http-history"],
         transformation: {
@@ -65,6 +71,7 @@ describe("PanesStore", () => {
         name: "New Pane",
         tabName: "New",
         enabled: true,
+        scope: "project" as const,
         input: "response.body",
         locations: ["http-history"],
         transformation: {
@@ -81,10 +88,14 @@ describe("PanesStore", () => {
     });
 
     it("should add pane to store", () => {
+      panesStore["globalData"].panes = [];
+      panesStore["projectData"].panes = [];
+
       const pane = panesStore.createPane({
         name: "New Pane",
         tabName: "New",
         enabled: true,
+        scope: "project" as const,
         input: "response.body",
         locations: ["http-history"],
         transformation: {
@@ -105,6 +116,7 @@ describe("PanesStore", () => {
         name: "Original",
         tabName: "Orig",
         enabled: true,
+        scope: "project" as const,
         input: "response.body",
         locations: ["http-history"],
         transformation: {
@@ -142,6 +154,7 @@ describe("PanesStore", () => {
         name: "To Delete",
         tabName: "Delete",
         enabled: true,
+        scope: "project" as const,
         input: "response.body",
         locations: ["http-history"],
         transformation: {
@@ -167,6 +180,7 @@ describe("PanesStore", () => {
         name: "Toggle Test",
         tabName: "Toggle",
         enabled: false,
+        scope: "project",
         input: "response.body",
         locations: ["http-history"],
         transformation: {
@@ -187,10 +201,13 @@ describe("PanesStore", () => {
 
   describe("getEnabledPanes", () => {
     it("should return only enabled panes", () => {
+      panesStore["globalData"].panes = [];
+
       panesStore.createPane({
         name: "Enabled 1",
         tabName: "E1",
         enabled: true,
+        scope: "project" as const,
         input: "response.body",
         locations: ["http-history"],
         transformation: {
@@ -204,6 +221,7 @@ describe("PanesStore", () => {
         name: "Disabled",
         tabName: "D",
         enabled: false,
+        scope: "project",
         input: "response.body",
         locations: ["http-history"],
         transformation: {
@@ -217,6 +235,7 @@ describe("PanesStore", () => {
         name: "Enabled 2",
         tabName: "E2",
         enabled: true,
+        scope: "project" as const,
         input: "response.body",
         locations: ["http-history"],
         transformation: {

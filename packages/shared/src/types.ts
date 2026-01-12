@@ -14,6 +14,8 @@ export type PaneLocation =
   | "automate"
   | "intercept";
 
+export type PaneScope = "global" | "project";
+
 export type TransformationType = "workflow" | "command";
 
 export type WorkflowTransformation = {
@@ -33,6 +35,7 @@ export type Pane = {
   tabName: string;
   description?: string;
   enabled: boolean;
+  scope: PaneScope;
   input: PaneInput;
   httpql?: string;
   locations: PaneLocation[];
@@ -53,6 +56,7 @@ export type PaneFormData = {
   tabName: string;
   description: string;
   enabled: boolean;
+  scope: PaneScope;
   input: PaneInput;
   httpql: string;
   locations: PaneLocation[];
@@ -107,10 +111,17 @@ export function isRequestInput(input: PaneInput): boolean {
   );
 }
 
+export type ExportedPane = Omit<
+  Pane,
+  "id" | "createdAt" | "updatedAt" | "scope"
+> & {
+  scope?: PaneScope;
+};
+
 export type PanesExport = {
   version: number;
   exportDate: number;
-  panes: Omit<Pane, "id" | "createdAt" | "updatedAt">[];
+  panes: ExportedPane[];
 };
 
 export type ImportResult = {

@@ -28,7 +28,12 @@ export const usePanesStore = defineStore("panes", () => {
     });
 
     sdk.backend.onEvent("pane:created", (pane: Pane) => {
-      panes.value.push(pane);
+      const existingIndex = panes.value.findIndex((p) => p.id === pane.id);
+      if (existingIndex === -1) {
+        panes.value.push(pane);
+      } else {
+        panes.value[existingIndex] = pane;
+      }
     });
 
     sdk.backend.onEvent("pane:updated", (pane: Pane) => {

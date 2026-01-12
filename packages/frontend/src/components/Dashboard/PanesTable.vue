@@ -86,6 +86,16 @@ const getShortLocationLabel = (location: PaneLocation): string => {
       </template>
     </Column>
 
+    <Column field="scope" header="Scope" sortable class="w-28">
+      <template #body="{ data }">
+        <Tag
+          :value="data.scope === 'global' ? 'Global' : 'Project'"
+          :severity="data.scope === 'global' ? 'info' : 'secondary'"
+          class="font-medium"
+        />
+      </template>
+    </Column>
+
     <Column field="input" header="Input Source" sortable class="w-44">
       <template #body="{ data }">
         <div class="flex items-center gap-2">
