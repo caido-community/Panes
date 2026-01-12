@@ -14,10 +14,6 @@ concurrency:
   group: ci-${{ github.ref_name }}
   cancel-in-progress: true
 
-env:
-  CAIDO_NODE_VERSION: 20
-  CAIDO_PNPM_VERSION: 9
-
 jobs:
   lint:
     name: 'Lint'
@@ -28,15 +24,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.CAIDO_NODE_VERSION }}
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.CAIDO_PNPM_VERSION }}
+      - name: Install mise
+        uses: jdx/mise-action@v2
 
       - name: Install dependencies
         run: pnpm install
@@ -53,15 +42,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.CAIDO_NODE_VERSION }}
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.CAIDO_PNPM_VERSION }}
+      - name: Install mise
+        uses: jdx/mise-action@v2
 
       - name: Install dependencies
         run: pnpm install
@@ -78,15 +60,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.CAIDO_NODE_VERSION }}
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.CAIDO_PNPM_VERSION }}
+      - name: Install mise
+        uses: jdx/mise-action@v2
 
       - name: Install dependencies
         run: pnpm install
