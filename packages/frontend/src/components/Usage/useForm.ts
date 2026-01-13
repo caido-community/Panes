@@ -1,4 +1,4 @@
-import { onMounted, onUnmounted, ref } from "vue";
+import { ref } from "vue";
 
 type Section = {
   id: string;
@@ -11,34 +11,238 @@ const sections: Section[] = [
     id: "what-is-panes",
     title: "What is Panes?",
     body: [
-      "Panes lets you create custom view modes for HTTP requests and responses using workflows or shell commands.",
-      "Use it to pretty-print JSON, decode JWTs, format XML, or run any custom transformation and view it inline in Caido.",
+      "Panes is a powerful Caido plugin that lets you create custom view modes for HTTP requests and responses. These custom tabs appear alongside the built-in Raw, Pretty, and Preview tabs in HTTP History, Replay, Sitemap, Automate, and Intercept.",
+      "Use Panes to transform and display data in custom formats - pretty-print JSON, decode Base64, format XML, extract JWT claims, or run any custom transformation using Caido's Convert workflows or shell commands.",
     ],
   },
   {
-    id: "quick-start",
-    title: "Quick Start",
+    id: "getting-started",
+    title: "Getting Started",
     body: [
-      "1) Open the Panes tab and create a pane with a name, tab label, and input source (request/response).",
-      "2) Pick a transformation: select a Convert workflow or provide a shell command using {{input}}.",
-      "3) Add an HTTPQL filter if you want to run only on matching requests.",
-      "4) Enable the pane and view results in the registered locations.",
+      "1. Navigate to the **Panes Manager** tab and click **New Pane** to create your first pane.",
+      "2. Give your pane a **Name** (internal identifier) and **Tab Name** (what appears in the UI).",
+      "3. Optionally add a **Description** to help you remember what the pane does.",
+      "4. Select an **Input Source** - this determines what data gets transformed (`request.body`, `response.headers`, etc.).",
+      "5. Choose your **Locations** - where the pane tab will appear (**HTTP History**, **Replay**, etc.).",
+      "6. Choose a **Transformation Type**:",
+      "   • **Workflow**: Select a Convert Workflow from the dropdown",
+      "   • **Shell Command**: Enter a command like `jq .` or `base64 -d`",
+      "7. Optionally enable **Code Block** and select a language for syntax highlighting.",
+      "8. Optionally add an **HTTPQL filter** to limit when the pane runs.",
+      "9. **Save** the pane. The plugin will automatically reload to apply changes!",
+    ],
+  },
+  {
+    id: "input-types",
+    title: "Input Types",
+    body: [
+      "**Request Body** - The body content of HTTP requests. Great for transforming `JSON` payloads or form data.",
+      "**Request Headers** - All request headers as `JSON`. Useful for analyzing authentication tokens or cookies.",
+      "**Request Query** - The URL query string parameters. Perfect for URL decoding or parsing.",
+      "**Request Raw** - The complete raw HTTP request including headers and body.",
+      "**Response Body** - The body content of HTTP responses. Most commonly used for `JSON` formatting.",
+      "**Response Headers** - All response headers as `JSON`. Analyze caching directives, content types, etc.",
+      "**Response Raw** - The complete raw HTTP response.",
+    ],
+  },
+  {
+    id: "locations",
+    title: "Pane Locations",
+    body: [
+      "**HTTP History** - The main request/response viewer. Panes appear as tabs when viewing historical requests.",
+      "**Sitemap** - The site structure view. View transformed data while exploring discovered endpoints.",
+      "**Replay** - The request editor. See transformed output while crafting and sending requests.",
+      "**Automate** - The automation tool. View pane output alongside automated request sequences.",
+      "**Intercept** - The proxy intercept view. Transform data in real-time as you intercept traffic.",
+    ],
+  },
+  {
+    id: "transformations",
+    title: "Transformations",
+    body: [
+      "Panes supports two types of transformations:",
+      "",
+      "**Convert Workflows** - The recommended way to transform data. Create a workflow in Caido's **Workflows** section with the `Convert` type, then select it in your pane.",
+      "Example workflows: `Base64 Decode`, `JSON Pretty Print`, `URL Decode`, `JWT Decode`, `XML Format`, `HTML Entity Decode`.",
+      "To create a Convert workflow: Go to **Workflows > Create > Convert**. Add nodes to transform the input and connect them to the output.",
+      "",
+      "**Shell Commands** - Execute external commands like `jq`, `base64`, `grep`, etc. Commands receive the input data via `stdin` and output via `stdout`.",
+      "Example commands:",
+      "  • `jq .` - Pretty print JSON",
+      "  • `jq '.key'` - Extract a specific JSON key",
+      "  • `base64 -d` - Decode base64",
+      "  • `grep 'pattern'` - Filter lines",
+      "Commands support variable expansion (see **Command Variables** section).",
+      "Set a timeout (default `30` seconds) to prevent commands from hanging.",
+    ],
+  },
+  {
+    id: "command-variables",
+    title: "Command Variables",
+    body: [
+      "When using **Shell Commands**, you can use variables that get expanded before execution:",
+      "",
+      "**Input Variables:**",
+      "  • `{{input}}` or `{{ input }}` - The extracted input data",
+      "",
+      "**Request Variables:**",
+      "  • `{{requestId}}` or `{{ requestId }}` - Request ID",
+      "  • `{{host}}` or `{{ host }}` - Request hostname",
+      "  • `{{port}}` or `{{ port }}` - Request port number",
+      "  • `{{path}}` or `{{ path }}` - Request path",
+      "  • `{{method}}` or `{{ method }}` - HTTP method (`GET`, `POST`, etc.)",
+      "  • `{{url}}` or `{{ url }}` - Full request URL",
+      "  • `{{scheme}}` or `{{ scheme }}` - URL scheme (`http` or `https`)",
+      "  • `{{query}}` or `{{ query }}` - Query string",
+      "",
+      "**Response Variables** (only available for response inputs):",
+      "  • `{{responseCode}}` or `{{ responseCode }}` - Response status code",
+      "  • `{{responseLength}}` or `{{ responseLength }}` - Response body length",
+      "",
+      "**Example:**",
+      "  Command: `echo 'Processing {{method}} request to {{host}}{{path}}'`",
+      "  Expanded: `echo 'Processing POST request to example.com/api/users'`",
+      "",
+      "All variable values are automatically escaped for shell safety.",
+    ],
+  },
+  {
+    id: "httpql-filtering",
+    title: "HTTPQL Filtering",
+    body: [
+      "Use **HTTPQL** to filter which requests trigger your pane. If a request doesn't match the filter, the pane won't attempt transformation.",
+      "",
+      "**Common filters:**",
+      '  • `resp.raw.cont:"application/json"` - Only JSON responses',
+      '  • `req.method == "POST"` - Only POST requests',
+      '  • `req.host.cont:"api"` - Only API endpoints',
+      "  • `resp.code == 200` - Only successful responses",
+      "",
+      "Leave the **HTTPQL** field empty to apply the pane to all requests.",
+    ],
+  },
+  {
+    id: "code-block",
+    title: "Code Block & Syntax Highlighting",
+    body: [
+      "Enable syntax highlighting for your pane output using **CodeMirror** integration.",
+      "",
+      "**How to use:**",
+      "1. When creating or editing a pane, check the **Code Block** option.",
+      "2. Select a language from the dropdown (`JSON`, `JavaScript`, `HTML`, `XML`, `CSS`, `Python`, `SQL`, `YAML`, `Markdown`, etc.).",
+      "3. The output will be displayed with syntax highlighting matching the selected language.",
+      "",
+      "**When to use:**",
+      "  • `JSON` responses → Select `JSON` for pretty formatting",
+      "  • `HTML` content → Select `HTML` for syntax highlighting",
+      "  • `JavaScript` code → Select `JavaScript` or `TypeScript`",
+      "  • Configuration files → Select `YAML` or `JSON`",
+      "",
+      "If **Code Block** is disabled, output is displayed as plain text with word wrapping.",
+    ],
+  },
+  {
+    id: "export-import",
+    title: "Export & Import",
+    body: [
+      "Export your panes to share configurations with teammates or backup your setup.",
+      "",
+      "**Export:**",
+      "  • Click the **Export** button in the **Panes Manager** sidebar",
+      "  • Select specific panes to export, or leave all selected to export everything",
+      "  • Download a `JSON` file containing all pane configurations",
+      "",
+      "**Import:**",
+      "  • Click the **Import** button in the **Panes Manager** sidebar",
+      "  • Select a `JSON` file exported from Panes",
+      "  • Choose to skip or overwrite existing panes with the same name",
+      "  • Review the import results (created, skipped, errors)",
+      "",
+      "**What's included:**",
+      "  • All pane settings (`name`, `input`, `locations`, `transformation`, etc.)",
+      "  • **Code Block** and language settings",
+      "  • **HTTPQL** filters",
+      "  • Export does **NOT** include IDs and timestamps, making it portable across projects",
     ],
   },
   {
     id: "tips",
-    title: "Tips",
+    title: "Tips & Best Practices",
     body: [
-      "Use HTTPQL filters to avoid running on non-JSON or irrelevant responses.",
-      "Prefer workflows for safer transforms; commands are powerful but should be used carefully.",
-      "Keep tab names short so they fit nicely in the view mode bar.",
+      "Naming:",
+      "  • Use descriptive Tab Names - keep them short (under 15 characters) so they fit nicely in the tab bar.",
+      "  • Add descriptions to help you remember what each pane does, especially when you have many panes.",
+      "",
+      "Performance:",
+      "  • Apply HTTPQL filters - avoid running expensive transformations on irrelevant requests.",
+      "  • Disable unused panes - disabled panes don't consume resources. Enable them only when needed.",
+      "  • Set appropriate command timeouts - prevent commands from hanging indefinitely.",
+      "",
+      "Getting Started:",
+      "  • Start with Response Body - it's the most common use case and easiest to test with JSON responses.",
+      "  • Test your Convert workflow first - use the Workflows section to verify it works before creating a pane.",
+      "  • Try the jq template - it's pre-configured and ready to use for JSON processing.",
+      "",
+      "Organization:",
+      "  • One pane per transformation - create separate panes for different transformations rather than combining them.",
+      "  • Use the Dashboard to monitor workflow status - catch missing workflows before they cause errors.",
+      "  • Export your panes regularly - backup your configurations for easy restoration.",
+      "",
+      "Code Block:",
+      "  • Enable Code Block for structured data (JSON, XML, HTML) - syntax highlighting makes it easier to read.",
+      "  • Select the correct language - matching the language improves highlighting accuracy.",
+      "  • Use plain text mode for unstructured data or when highlighting isn't needed.",
+    ],
+  },
+  {
+    id: "troubleshooting",
+    title: "Troubleshooting",
+    body: [
+      "Pane not appearing:",
+      "  • Make sure the pane is enabled (toggle switch in Dashboard or Panes Manager)",
+      "  • Verify the pane is configured for the location you're viewing",
+      "  • Check that the input type matches the request/response you're viewing",
+      "  • The plugin auto-reloads after changes, but manual reload may be needed in some cases",
+      "",
+      "Empty output:",
+      "  • Check that your HTTPQL filter matches the request",
+      "  • Verify the input type has data (e.g., response.body exists)",
+      "  • For command transformations, check that the command is installed and accessible",
+      "  • Review error messages in the view mode - they provide specific failure reasons",
+      "",
+      "Workflow errors:",
+      "  • Test your Convert workflow independently in the Workflows section with sample input",
+      "  • Check the Dashboard for workflow validation status - missing workflows show a warning",
+      "  • Ensure the workflow is enabled in Caido's Workflows section",
+      "  • Verify the workflow accepts the input format you're providing",
+      "",
+      "Command errors:",
+      "  • Verify the command is installed and available in your PATH",
+      "  • Check command syntax - use variables correctly ({{variable}} or {{ variable }})",
+      "  • Review timeout settings - commands may be timing out",
+      "  • Test the command manually in a terminal with sample input",
+      "",
+      "Missing workflows in dropdown:",
+      "  • Only Convert-type workflows appear in the dropdown",
+      "  • Create a new Convert workflow if needed: Workflows > Create > Convert",
+      "  • Refresh the Panes Manager page to reload the workflow list",
+      "",
+      "Syntax highlighting issues:",
+      "  • Ensure Code Block is enabled and a language is selected",
+      "  • Try a different language if highlighting seems incorrect",
+      "  • Plain text mode works for any content if highlighting isn't needed",
+      "",
+      "Changes not reflecting:",
+      "  • The plugin automatically reloads after creating, enabling, or modifying panes",
+      "  • If changes don't appear, try a manual page reload",
+      "  • Check that you saved the pane (click Save button)",
+      "  • Verify the pane is enabled if you're expecting to see it",
     ],
   },
 ];
 
 export const useForm = () => {
   const activeSection = ref<string>(sections[0]?.id ?? "");
-  const contentRef = ref<HTMLElement>();
 
   const scrollToSection = (sectionId: string) => {
     const el = document.getElementById(sectionId);
@@ -48,36 +252,9 @@ export const useForm = () => {
     }
   };
 
-  const handleScroll = () => {
-    if (contentRef.value === undefined) return;
-    const scrollPosition = contentRef.value.scrollTop + 200;
-    for (let i = sections.length - 1; i >= 0; i--) {
-      const section = sections[i];
-      const element = document.getElementById(section.id);
-      if (element !== null && element.offsetTop <= scrollPosition) {
-        activeSection.value = section.id;
-        break;
-      }
-    }
-  };
-
-  const isActive = (sectionId: string) => activeSection.value === sectionId;
-
-  onMounted(() => {
-    contentRef.value?.addEventListener("scroll", handleScroll);
-  });
-
-  onUnmounted(() => {
-    contentRef.value?.removeEventListener("scroll", handleScroll);
-  });
-
   return {
     sections,
     activeSection,
-    contentRef,
-    handleScroll,
     scrollToSection,
-    isActive,
   };
 };
-

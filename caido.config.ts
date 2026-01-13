@@ -12,7 +12,7 @@ export default defineConfig({
   id,
   name: "Panes",
   description: "Custom view modes for HTTP requests and responses",
-  version: "0.0.1",
+  version: "1.0.0",
   author: {
     name: "Caido Labs Inc.",
     email: "dev@caido.io",
@@ -21,34 +21,23 @@ export default defineConfig({
   plugins: [
     {
       kind: "backend",
-      id: "backend",
+      id: "panes-backend",
       root: "packages/backend",
     },
     {
       kind: 'frontend',
-      id: "frontend",
+      id: "panes-frontend",
       root: 'packages/frontend',
       backend: {
-        id: "backend",
+        id: "panes-backend",
       },
       vite: {
         plugins: [vue()],
         build: {
-          rollupOptions: {
+  rollupOptions: {
             external: [
-              '@caido/frontend-sdk', 
-              "@codemirror/autocomplete", 
-              "@codemirror/commands", 
-              "@codemirror/language", 
-              "@codemirror/lint", 
-              "@codemirror/search", 
-              "@codemirror/state", 
-              "@codemirror/view", 
-              "@lezer/common", 
-              "@lezer/highlight", 
-              "@lezer/lr",
+              '@caido/frontend-sdk',
               "vue",
-
             ]
           }
         },
