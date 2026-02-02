@@ -27,6 +27,8 @@ export type CommandTransformation = {
   type: "command";
   command: string;
   timeout?: number;
+  shell?: string;
+  shellConfig?: string;
 };
 
 export type Pane = {
@@ -64,6 +66,8 @@ export type PaneFormData = {
   workflowId: string;
   command: string;
   timeout: number;
+  shell: string;
+  shellConfig: string;
   codeBlock: boolean;
   language: string;
 };

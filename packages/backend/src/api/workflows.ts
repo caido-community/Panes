@@ -270,12 +270,63 @@ async function driveChild(
   return output;
 }
 
+function getShellArgs(shell: string): string[] {
+  const shellName = shell.toLowerCase();
+  if (shellName.includes("cmd")) {
+    return ["/C"];
+  }
+  if (shellName.includes("powershell") || shellName.includes("pwsh")) {
+    return ["-Command"];
+  }
+  return ["-c"];
+}
+
+function buildInitScript(shell: string, shellConfig: string): string {
+  if (!shellConfig.trim()) {
+    return "";
+  }
+
+  const shellName = shell.toLowerCase();
+
+  if (shellName.includes("cmd")) {
+    return "@echo off";
+  }
+
+  if (shellName.includes("powershell") || shellName.includes("pwsh")) {
+    return `. ${shellConfig} 2>$null`;
+  }
+
+  return `source ${shellConfig} > /dev/null 2>&1 || true`;
+}
+
+function buildFullScript(
+  shell: string,
+  initScript: string,
+  command: string,
+): string {
+  if (!initScript) {
+    return command;
+  }
+
+  const shellName = shell.toLowerCase();
+
+  // Use appropriate line separator
+  const separator =
+    shellName.includes("cmd") || shellName.includes("powershell")
+      ? "\r\n"
+      : "\n";
+
+  return `${initScript}${separator}${command}`;
+}
+
 export async function runCommand(
   _sdk: BackendSDK,
   command: string,
   input: string,
   timeout: number,
   requestId: string,
+  shell: string = "/bin/bash",
+  shellConfig: string = "~/.bashrc",
 ): Promise<Result<string>> {
   const sdk = requireSDK();
 
@@ -304,9 +355,13 @@ export async function runCommand(
 
   const timeoutMs = Math.max(0, Math.min(86400000, timeout * 1000));
 
+  // Build platform-appropriate script
+  const initScript = buildInitScript(shell, shellConfig);
+  const fullScript = buildFullScript(shell, initScript, expandedCommand);
+  const shellArgs = getShellArgs(shell);
+
   try {
-    const child = spawn(expandedCommand, [], {
-      shell: true,
+    const child = spawn(shell, [...shellArgs, fullScript], {
       stdio: ["pipe", "pipe", "pipe"],
     });
 

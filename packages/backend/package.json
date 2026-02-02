@@ -10,6 +10,7 @@
     "shared": "workspace:*"
   },
   "devDependencies": {
-    "@caido/sdk-backend": "^0.53.1"
+    "@caido/sdk-backend": "^0.53.1",
+    "@types/node": "^25.1.0"
   }
 }

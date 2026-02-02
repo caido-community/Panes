@@ -80,6 +80,8 @@ END {
   }
 }'`,
     timeout: 30,
+    shell: "/bin/bash",
+    shellConfig: "~/.bashrc",
   },
   codeBlock: true,
   language: "text",

@@ -49,6 +49,7 @@ The project is organized into distinct packages: `backend`, `frontend`, and `sha
 ### Pane Definition
 
 A pane consists of:
+
 - **Input Source**: What data to transform (request body, response headers, etc.)
 - **Locations**: Where the pane tab appears (HTTP History, Replay, Sitemap, etc.)
 - **Transformation**: Either a Convert Workflow or a Shell Command
@@ -78,6 +79,8 @@ export const myTemplate: CreatePaneInput = {
     type: "command",
     command: "my-command",
     timeout: 30,
+    shell: "/bin/bash",
+    shellConfig: "~/.bashrc",
   },
   codeBlock: true,
   language: "json",

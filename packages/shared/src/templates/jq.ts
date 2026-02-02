@@ -13,6 +13,8 @@ export const jqTemplate: CreatePaneInput = {
     type: "command",
     command: "jq .",
     timeout: 30,
+    shell: "/bin/bash",
+    shellConfig: "~/.bashrc",
   },
   codeBlock: true,
   language: "json",

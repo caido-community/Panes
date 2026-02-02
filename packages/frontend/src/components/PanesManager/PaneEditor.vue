@@ -278,6 +278,32 @@ const languageOptions = [
             @update:model-value="updateField('timeout', $event ?? 30)"
           />
         </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <label class="text-sm">Shell Path</label>
+            <InputText
+              :model-value="form.shell"
+              placeholder="/bin/bash"
+              class="w-full font-mono text-sm"
+              @update:model-value="updateField('shell', $event)"
+            />
+          </div>
+
+          <div class="space-y-2">
+            <label class="text-sm">Shell Config</label>
+            <InputText
+              :model-value="form.shellConfig"
+              placeholder="~/.bashrc"
+              class="w-full font-mono text-sm"
+              @update:model-value="updateField('shellConfig', $event)"
+            />
+          </div>
+        </div>
+        <p class="text-xs text-surface-400">
+          Shell to execute commands. Unix: /bin/bash, /bin/zsh. Windows:
+          cmd.exe, powershell.exe
+        </p>
       </div>
 
       <div v-else class="space-y-2">

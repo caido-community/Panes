@@ -25,6 +25,8 @@ const getDefaultFormData = (): PaneFormData => ({
   workflowId: "",
   command: "",
   timeout: 30,
+  shell: "/bin/bash",
+  shellConfig: "~/.bashrc",
   codeBlock: false,
   language: "json",
 });
@@ -98,6 +100,14 @@ export const useForm = () => {
         pane.transformation.type === "command"
           ? (pane.transformation.timeout ?? 30)
           : 30,
+      shell:
+        pane.transformation.type === "command"
+          ? (pane.transformation.shell ?? "/bin/bash")
+          : "/bin/bash",
+      shellConfig:
+        pane.transformation.type === "command"
+          ? (pane.transformation.shellConfig ?? "~/.bashrc")
+          : "~/.bashrc",
       codeBlock: pane.codeBlock ?? false,
       language: pane.language ?? "json",
     };
@@ -147,7 +157,13 @@ export const useForm = () => {
       transformation:
         data.transformationType === "workflow"
           ? { type: "workflow", workflowId: data.workflowId }
-          : { type: "command", command: data.command, timeout: data.timeout },
+          : {
+              type: "command",
+              command: data.command,
+              timeout: data.timeout,
+              shell: data.shell.trim() || "/bin/bash",
+              shellConfig: data.shellConfig.trim() || undefined,
+            },
       codeBlock: data.codeBlock || undefined,
       language: data.codeBlock ? data.language : undefined,
     };

@@ -146,6 +146,8 @@ export const useViewMode = (options: UseViewModeOptions) => {
           input,
           pane.transformation.timeout ?? 30,
           response.id,
+          pane.transformation.shell ?? "/bin/bash",
+          pane.transformation.shellConfig ?? "~/.bashrc",
         );
 
         if (commandResult.kind === "Error") {
@@ -200,12 +202,22 @@ export const useViewMode = (options: UseViewModeOptions) => {
         pane?.transformation.type === "command"
           ? (pane.transformation.timeout ?? 30)
           : 30;
+      const shell =
+        pane?.transformation.type === "command"
+          ? (pane.transformation.shell ?? "/bin/bash")
+          : "/bin/bash";
+      const shellConfig =
+        pane?.transformation.type === "command"
+          ? (pane.transformation.shellConfig ?? "~/.bashrc")
+          : "~/.bashrc";
 
       const commandResult = await sdk.backend.runCommand(
         transformation.command,
         input,
         timeout,
         request.id,
+        shell,
+        shellConfig,
       );
 
       if (commandResult.kind === "Error") {
