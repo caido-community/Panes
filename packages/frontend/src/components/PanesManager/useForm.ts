@@ -29,6 +29,7 @@ const getDefaultFormData = (): PaneFormData => ({
   shellConfig: "~/.bashrc",
   codeBlock: false,
   language: "json",
+  devMode: false,
 });
 
 export const useForm = () => {
@@ -110,6 +111,7 @@ export const useForm = () => {
           : "~/.bashrc",
       codeBlock: pane.codeBlock ?? false,
       language: pane.language ?? "json",
+      devMode: pane.devMode ?? false,
     };
     isCreating.value = false;
   });
@@ -166,6 +168,7 @@ export const useForm = () => {
             },
       codeBlock: data.codeBlock,
       language: data.codeBlock ? data.language : undefined,
+      devMode: data.devMode,
     };
   };
 
