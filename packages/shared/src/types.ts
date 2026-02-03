@@ -75,6 +75,7 @@ export type PaneFormData = {
 export type PanesConfig = {
   version: number;
   panes: Pane[];
+  templatesSeeded?: boolean;
 };
 
 export type Result<T> =

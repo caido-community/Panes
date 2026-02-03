@@ -164,7 +164,7 @@ export const useForm = () => {
               shell: data.shell.trim() || "/bin/bash",
               shellConfig: data.shellConfig.trim() || undefined,
             },
-      codeBlock: data.codeBlock || undefined,
+      codeBlock: data.codeBlock,
       language: data.codeBlock ? data.language : undefined,
     };
   };
