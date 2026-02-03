@@ -47,22 +47,11 @@ const pane = computed(() => {
 
     <div v-else-if="state.type === 'Success'" class="h-full w-full">
       <CodeMirrorView
-        v-if="pane?.codeBlock === true && pane.language"
         :content="state.output"
-        :language="pane.language"
+        :language="
+          pane?.codeBlock === true && pane.language ? pane.language : 'text'
+        "
       />
-      <div v-else class="h-full w-full overflow-auto p-4">
-        <div
-          class="text-sm font-mono whitespace-pre-wrap break-words break-all overflow-wrap-anywhere select-text"
-          style="
-            word-break: break-all;
-            overflow-wrap: anywhere;
-            user-select: text;
-          "
-        >
-          {{ state.output }}
-        </div>
-      </div>
     </div>
   </div>
 </template>

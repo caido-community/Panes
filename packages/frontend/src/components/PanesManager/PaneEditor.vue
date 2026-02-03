@@ -20,7 +20,10 @@ const form = defineModel<PaneFormData>({ required: true });
 defineProps<{
   isCreating: boolean;
   canSave: boolean;
-  inputOptions: { label: string; value: PaneInput }[];
+  inputOptions: {
+    label: string;
+    items: { label: string; value: PaneInput }[];
+  }[];
   locationOptions: { label: string; value: PaneLocation }[];
   transformationOptions: { label: string; value: TransformationType }[];
   scopeOptions: { label: string; value: PaneScope }[];
@@ -146,6 +149,8 @@ const languageOptions = [
         :options="inputOptions"
         option-label="label"
         option-value="value"
+        option-group-label="label"
+        option-group-children="items"
         class="w-full"
         placeholder="Select input source"
         @update:model-value="updateField('input', $event)"

@@ -194,14 +194,27 @@ export const useForm = () => {
     }
   };
 
-  const inputOptions: { label: string; value: PaneInput }[] = [
-    { label: "Request Body", value: "request.body" },
-    { label: "Request Headers", value: "request.headers" },
-    { label: "Request Query", value: "request.query" },
-    { label: "Request Raw", value: "request.raw" },
-    { label: "Response Body", value: "response.body" },
-    { label: "Response Headers", value: "response.headers" },
-    { label: "Response Raw", value: "response.raw" },
+  const inputOptions: {
+    label: string;
+    items: { label: string; value: PaneInput }[];
+  }[] = [
+    {
+      label: "Request",
+      items: [
+        { label: "Request Body", value: "request.body" },
+        { label: "Request Headers", value: "request.headers" },
+        { label: "Request Query", value: "request.query" },
+        { label: "Request Raw", value: "request.raw" },
+      ],
+    },
+    {
+      label: "Response",
+      items: [
+        { label: "Response Body", value: "response.body" },
+        { label: "Response Headers", value: "response.headers" },
+        { label: "Response Raw", value: "response.raw" },
+      ],
+    },
   ];
 
   const locationOptions: { label: string; value: PaneLocation }[] = [
