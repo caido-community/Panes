@@ -1,9 +1,21 @@
 import type { RequestFull, ResponseFull } from "@caido/sdk-frontend";
+import type { Pane } from "shared";
 import { isResponseInput } from "shared";
 import { computed, onMounted, ref, toValue, watch } from "vue";
 
 import { usePanesStore } from "@/stores/panes";
 import type { FrontendSDK } from "@/types";
+
+function devLog(pane: Pane, message: string, data?: unknown): void {
+  if (pane.devMode !== true) return;
+  const prefix = `%c[Pane: ${pane.name}]`;
+  const style = "color: #22d3ee; font-weight: bold";
+  if (data !== undefined) {
+    console.log(prefix, style, message, data);
+  } else {
+    console.log(prefix, style, message);
+  }
+}
 
 type ViewModeState =
   | { type: "Loading" }
@@ -117,6 +129,11 @@ export const useViewMode = (options: UseViewModeOptions) => {
     const sdk = toValue(options.sdk);
     const isResponseOnly = isResponseInput(pane.input);
 
+    devLog(pane, "Execution started", {
+      input: pane.input,
+      transformationType: pane.transformation.type,
+    });
+
     if (isResponseOnly) {
       const response = toValue(options.response);
       if (response === undefined) {
@@ -135,12 +152,17 @@ export const useViewMode = (options: UseViewModeOptions) => {
         pane.input as "response.body" | "response.headers" | "response.raw",
       );
 
+      devLog(pane, `Input extracted (${input.length} bytes)`);
+
       if (input === "") {
         state.value = { type: "Failed", error: "No response data available." };
         return;
       }
 
       if (pane.transformation.type === "command") {
+        devLog(pane, "Command execution started", {
+          command: pane.transformation.command,
+        });
         const commandResult = await sdk.backend.runCommand(
           pane.transformation.command,
           input,
@@ -151,24 +173,41 @@ export const useViewMode = (options: UseViewModeOptions) => {
         );
 
         if (commandResult.kind === "Error") {
+          devLog(pane, "Command execution failed", {
+            error: commandResult.error,
+          });
           state.value = { type: "Failed", error: commandResult.error };
           return;
         }
+
+        devLog(
+          pane,
+          `Command execution success (${commandResult.value.length} bytes output)`,
+        );
 
         setCachedResult(paneIdValue, response.id, commandResult.value);
         state.value = { type: "Success", output: commandResult.value };
         return;
       }
 
+      devLog(pane, "Workflow execution started", {
+        workflowId: pane.transformation.workflowId,
+      });
       const result = await sdk.backend.runWorkflow(
         pane.transformation.workflowId,
         input,
       );
 
       if (result.kind === "Error") {
+        devLog(pane, "Workflow execution failed", { error: result.error });
         state.value = { type: "Failed", error: result.error };
         return;
       }
+
+      devLog(
+        pane,
+        `Workflow execution success (${result.value.length} bytes output)`,
+      );
 
       setCachedResult(paneIdValue, response.id, result.value);
       state.value = { type: "Success", output: result.value };
@@ -196,20 +235,26 @@ export const useViewMode = (options: UseViewModeOptions) => {
 
     const { input, transformation } = result.value;
 
+    devLog(pane, `Input extracted (${input.length} bytes)`);
+
     if (transformation.type === "command") {
-      const pane = store.getPaneById(paneIdValue);
+      const paneForCommand = store.getPaneById(paneIdValue);
       const timeout =
-        pane?.transformation.type === "command"
-          ? (pane.transformation.timeout ?? 30)
+        paneForCommand?.transformation.type === "command"
+          ? (paneForCommand.transformation.timeout ?? 30)
           : 30;
       const shell =
-        pane?.transformation.type === "command"
-          ? (pane.transformation.shell ?? "/bin/bash")
+        paneForCommand?.transformation.type === "command"
+          ? (paneForCommand.transformation.shell ?? "/bin/bash")
           : "/bin/bash";
       const shellConfig =
-        pane?.transformation.type === "command"
-          ? (pane.transformation.shellConfig ?? "~/.bashrc")
+        paneForCommand?.transformation.type === "command"
+          ? (paneForCommand.transformation.shellConfig ?? "~/.bashrc")
           : "~/.bashrc";
+
+      devLog(pane, "Command execution started", {
+        command: transformation.command,
+      });
 
       const commandResult = await sdk.backend.runCommand(
         transformation.command,
@@ -221,14 +266,26 @@ export const useViewMode = (options: UseViewModeOptions) => {
       );
 
       if (commandResult.kind === "Error") {
+        devLog(pane, "Command execution failed", {
+          error: commandResult.error,
+        });
         state.value = { type: "Failed", error: commandResult.error };
         return;
       }
+
+      devLog(
+        pane,
+        `Command execution success (${commandResult.value.length} bytes output)`,
+      );
 
       setCachedResult(paneIdValue, request.id, commandResult.value);
       state.value = { type: "Success", output: commandResult.value };
       return;
     }
+
+    devLog(pane, "Workflow execution started", {
+      workflowId: transformation.workflowId,
+    });
 
     const workflowResult = await sdk.backend.runWorkflow(
       transformation.workflowId,
@@ -236,9 +293,17 @@ export const useViewMode = (options: UseViewModeOptions) => {
     );
 
     if (workflowResult.kind === "Error") {
+      devLog(pane, "Workflow execution failed", {
+        error: workflowResult.error,
+      });
       state.value = { type: "Failed", error: workflowResult.error };
       return;
     }
+
+    devLog(
+      pane,
+      `Workflow execution success (${workflowResult.value.length} bytes output)`,
+    );
 
     setCachedResult(paneIdValue, request.id, workflowResult.value);
     state.value = { type: "Success", output: workflowResult.value };
