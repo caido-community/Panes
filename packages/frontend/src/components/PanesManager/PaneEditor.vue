@@ -71,7 +71,6 @@ const languageOptions = [
   { label: "SQL", value: "sql" },
   { label: "YAML", value: "yaml" },
   { label: "Markdown", value: "markdown" },
-  { label: "Plain Text", value: "text" },
 ];
 </script>
 
