@@ -289,14 +289,14 @@ function buildInitScript(shell: string, shellConfig: string): string {
   const shellName = shell.toLowerCase();
 
   if (shellName.includes("cmd")) {
-    return "@echo off";
+    return "";
   }
 
   if (shellName.includes("powershell") || shellName.includes("pwsh")) {
-    return `. ${shellConfig} 2>$null`;
+    return `. "${shellConfig}" 2>$null`;
   }
 
-  return `source ${shellConfig} > /dev/null 2>&1 || true`;
+  return `source "${shellConfig}" > /dev/null 2>&1 || true`;
 }
 
 function buildFullScript(
@@ -310,11 +310,7 @@ function buildFullScript(
 
   const shellName = shell.toLowerCase();
 
-  // Use appropriate line separator
-  const separator =
-    shellName.includes("cmd") || shellName.includes("powershell")
-      ? "\r\n"
-      : "\n";
+  const separator = shellName.includes("cmd") ? "\r\n" : "\n";
 
   return `${initScript}${separator}${command}`;
 }
