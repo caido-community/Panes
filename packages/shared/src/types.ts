@@ -47,6 +47,7 @@ export type Pane = {
   templateId?: string;
   codeBlock?: boolean;
   language?: string;
+  devMode?: boolean;
 };
 
 export type CreatePaneInput = Omit<Pane, "id" | "createdAt" | "updatedAt">;
@@ -70,11 +71,13 @@ export type PaneFormData = {
   shellConfig: string;
   codeBlock: boolean;
   language: string;
+  devMode: boolean;
 };
 
 export type PanesConfig = {
   version: number;
   panes: Pane[];
+  templatesSeeded?: boolean;
 };
 
 export type Result<T> =

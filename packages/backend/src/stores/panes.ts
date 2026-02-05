@@ -151,19 +151,12 @@ class CombinedPanesStore {
   }
 
   async ensureTemplatesInstalled(): Promise<void> {
+    if (this.globalData.templatesSeeded === true) {
+      return;
+    }
+
     const templates = getAllTemplates();
-    const existingTemplateIds = new Set(
-      this.globalData.panes
-        .filter((p) => p.templateId !== undefined)
-        .map((p) => p.templateId as string),
-    );
-
-    let added = false;
     for (const template of templates) {
-      if (existingTemplateIds.has(template.templateId)) {
-        continue;
-      }
-
       const { templateId, ...paneData } = template;
       const pane = createPane({
         ...paneData,
@@ -171,13 +164,11 @@ class CombinedPanesStore {
         scope: "global",
       });
       this.globalData.panes.push(pane);
-      added = true;
     }
 
-    if (added) {
-      this.notify();
-      await this.saveGlobalPanes();
-    }
+    this.globalData.templatesSeeded = true;
+    this.notify();
+    await this.saveGlobalPanes();
   }
 
   getPanes(): Pane[] {

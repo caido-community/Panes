@@ -31,6 +31,7 @@ const getDefaultFormData = (shellDefaults: ShellDefaults): PaneFormData => {
     shellConfig: shellDefaults.shellConfig,
     codeBlock: false,
     language: "json",
+    devMode: false,
   };
 };
 
@@ -132,6 +133,7 @@ export const useForm = () => {
           : shellDefaults.value.shellConfig,
       codeBlock: pane.codeBlock ?? false,
       language: pane.language ?? "json",
+      devMode: pane.devMode ?? false,
     };
     isCreating.value = false;
   });
@@ -186,8 +188,9 @@ export const useForm = () => {
               shell: data.shell.trim() || shellDefaults.value.shell,
               shellConfig: data.shellConfig.trim() || undefined,
             },
-      codeBlock: data.codeBlock || undefined,
+      codeBlock: data.codeBlock,
       language: data.codeBlock ? data.language : undefined,
+      devMode: data.devMode,
     };
   };
 
@@ -216,14 +219,27 @@ export const useForm = () => {
     }
   };
 
-  const inputOptions: { label: string; value: PaneInput }[] = [
-    { label: "Request Body", value: "request.body" },
-    { label: "Request Headers", value: "request.headers" },
-    { label: "Request Query", value: "request.query" },
-    { label: "Request Raw", value: "request.raw" },
-    { label: "Response Body", value: "response.body" },
-    { label: "Response Headers", value: "response.headers" },
-    { label: "Response Raw", value: "response.raw" },
+  const inputOptions: {
+    label: string;
+    items: { label: string; value: PaneInput }[];
+  }[] = [
+    {
+      label: "Request",
+      items: [
+        { label: "Request Body", value: "request.body" },
+        { label: "Request Headers", value: "request.headers" },
+        { label: "Request Query", value: "request.query" },
+        { label: "Request Raw", value: "request.raw" },
+      ],
+    },
+    {
+      label: "Response",
+      items: [
+        { label: "Response Body", value: "response.body" },
+        { label: "Response Headers", value: "response.headers" },
+        { label: "Response Raw", value: "response.raw" },
+      ],
+    },
   ];
 
   const locationOptions: { label: string; value: PaneLocation }[] = [

@@ -23,6 +23,7 @@ const {
   scopeOptions,
   workflowOptions,
   workflowsLoading,
+  fetchWorkflows,
   selectPane,
   startCreate,
   cancelEdit,
@@ -92,6 +93,7 @@ const showImportDialog = ref(false);
           @save="savePane"
           @cancel="cancelEdit"
           @delete="deletePane"
+          @refresh-workflows="fetchWorkflows"
         />
         <EmptyState
           v-else

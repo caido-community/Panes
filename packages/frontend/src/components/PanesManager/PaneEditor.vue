@@ -20,7 +20,10 @@ const form = defineModel<PaneFormData>({ required: true });
 defineProps<{
   isCreating: boolean;
   canSave: boolean;
-  inputOptions: { label: string; value: PaneInput }[];
+  inputOptions: {
+    label: string;
+    items: { label: string; value: PaneInput }[];
+  }[];
   locationOptions: { label: string; value: PaneLocation }[];
   transformationOptions: { label: string; value: TransformationType }[];
   scopeOptions: { label: string; value: PaneScope }[];
@@ -32,6 +35,7 @@ const emit = defineEmits<{
   save: [];
   cancel: [];
   delete: [];
+  refreshWorkflows: [];
 }>();
 
 const updateField = <K extends keyof PaneFormData>(
@@ -68,7 +72,6 @@ const languageOptions = [
   { label: "SQL", value: "sql" },
   { label: "YAML", value: "yaml" },
   { label: "Markdown", value: "markdown" },
-  { label: "Plain Text", value: "text" },
 ];
 </script>
 
@@ -146,6 +149,8 @@ const languageOptions = [
         :options="inputOptions"
         option-label="label"
         option-value="value"
+        option-group-label="label"
+        option-group-children="items"
         class="w-full"
         placeholder="Select input source"
         @update:model-value="updateField('input', $event)"
@@ -317,6 +322,7 @@ const languageOptions = [
           placeholder="Select a workflow"
           :loading="workflowsLoading"
           :disabled="workflowsLoading"
+          @focus="emit('refreshWorkflows')"
           @update:model-value="updateField('workflowId', $event)"
         />
         <p
@@ -363,16 +369,24 @@ const languageOptions = [
     <div
       class="flex items-center justify-between pt-4 border-t border-surface-700"
     >
-      <Button
-        v-if="!isCreating"
-        label="Delete"
-        icon="fas fa-trash"
-        severity="danger"
-        outlined
-        size="small"
-        @click="emit('delete')"
-      />
-      <div v-else />
+      <div class="flex items-center gap-4">
+        <Button
+          v-if="!isCreating"
+          label="Delete"
+          icon="fas fa-trash"
+          severity="danger"
+          outlined
+          size="small"
+          @click="emit('delete')"
+        />
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-surface-400">Dev Mode</span>
+          <ToggleSwitch
+            :model-value="form.devMode"
+            @update:model-value="updateField('devMode', $event)"
+          />
+        </div>
+      </div>
 
       <div class="flex gap-2">
         <Button
