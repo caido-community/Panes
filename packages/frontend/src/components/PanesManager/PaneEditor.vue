@@ -284,7 +284,7 @@ const languageOptions = [
             <label class="text-sm">Shell Path</label>
             <InputText
               :model-value="form.shell"
-              placeholder="/bin/bash"
+              placeholder="Leave empty for system default"
               class="w-full font-mono text-sm"
               @update:model-value="updateField('shell', $event)"
             />
@@ -294,15 +294,15 @@ const languageOptions = [
             <label class="text-sm">Shell Config</label>
             <InputText
               :model-value="form.shellConfig"
-              placeholder="~/.bashrc"
+              placeholder="e.g., ~/.bashrc or ~/.zshrc"
               class="w-full font-mono text-sm"
               @update:model-value="updateField('shellConfig', $event)"
             />
           </div>
         </div>
         <p class="text-xs text-surface-400">
-          Shell to execute commands. Unix: /bin/bash, /bin/zsh. Windows:
-          cmd.exe, powershell.exe
+          Shell is auto-detected based on your OS. Defaults: Linux/macOS:
+          /bin/bash, macOS: /bin/zsh, Windows: powershell.exe
         </p>
       </div>
 

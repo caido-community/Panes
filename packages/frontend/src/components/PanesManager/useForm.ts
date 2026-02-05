@@ -4,6 +4,7 @@ import type {
   PaneInput,
   PaneLocation,
   PaneScope,
+  ShellDefaults,
   TransformationType,
   WorkflowInfo,
 } from "shared";
@@ -12,35 +13,55 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useSDK } from "@/plugins/sdk";
 import { usePanesStore } from "@/stores/panes";
 
-const getDefaultFormData = (): PaneFormData => ({
-  name: "",
-  tabName: "",
-  description: "",
-  enabled: true,
-  scope: "project",
-  input: "response.body",
-  httpql: "",
-  locations: ["http-history", "replay"],
-  transformationType: "workflow",
-  workflowId: "",
-  command: "",
-  timeout: 30,
-  shell: "/bin/bash",
-  shellConfig: "~/.bashrc",
-  codeBlock: false,
-  language: "json",
-});
+const getDefaultFormData = (shellDefaults: ShellDefaults): PaneFormData => {
+  return {
+    name: "",
+    tabName: "",
+    description: "",
+    enabled: true,
+    scope: "project",
+    input: "response.body",
+    httpql: "",
+    locations: ["http-history", "replay"],
+    transformationType: "workflow",
+    workflowId: "",
+    command: "",
+    timeout: 30,
+    shell: shellDefaults.shell,
+    shellConfig: shellDefaults.shellConfig,
+    codeBlock: false,
+    language: "json",
+  };
+};
 
 export const useForm = () => {
   const sdk = useSDK();
   const store = usePanesStore();
 
+  const shellDefaults = ref<ShellDefaults>({
+    shell: "/bin/bash",
+    shellConfig: "~/.bashrc",
+  });
   const selectedPaneId = ref<string | undefined>(undefined);
   const isCreating = ref(false);
-  const formData = ref<PaneFormData>(getDefaultFormData());
+  const formData = ref<PaneFormData>(getDefaultFormData(shellDefaults.value));
   const workflows = ref<WorkflowInfo[]>([]);
   const workflowsLoading = ref(false);
   const workflowsError = ref<string | undefined>(undefined);
+
+  const fetchShellDefaults = async () => {
+    const result = await sdk.backend.getShellDefaults();
+    if (result.kind === "Success") {
+      shellDefaults.value = result.value;
+      if (
+        formData.value.shell === "/bin/bash" &&
+        formData.value.shellConfig === "~/.bashrc"
+      ) {
+        formData.value.shell = result.value.shell;
+        formData.value.shellConfig = result.value.shellConfig;
+      }
+    }
+  };
 
   const fetchWorkflows = async () => {
     workflowsLoading.value = true;
@@ -58,6 +79,7 @@ export const useForm = () => {
   };
 
   onMounted(() => {
+    fetchShellDefaults();
     fetchWorkflows();
   });
 
@@ -72,7 +94,7 @@ export const useForm = () => {
 
   watch(selectedPaneId, (id) => {
     if (id === undefined) {
-      formData.value = getDefaultFormData();
+      formData.value = getDefaultFormData(shellDefaults.value);
       return;
     }
     const pane = store.getPaneById(id);
@@ -102,12 +124,12 @@ export const useForm = () => {
           : 30,
       shell:
         pane.transformation.type === "command"
-          ? (pane.transformation.shell ?? "/bin/bash")
-          : "/bin/bash",
+          ? (pane.transformation.shell ?? shellDefaults.value.shell)
+          : shellDefaults.value.shell,
       shellConfig:
         pane.transformation.type === "command"
-          ? (pane.transformation.shellConfig ?? "~/.bashrc")
-          : "~/.bashrc",
+          ? (pane.transformation.shellConfig ?? shellDefaults.value.shellConfig)
+          : shellDefaults.value.shellConfig,
       codeBlock: pane.codeBlock ?? false,
       language: pane.language ?? "json",
     };
@@ -121,14 +143,14 @@ export const useForm = () => {
 
   const startCreate = () => {
     selectedPaneId.value = undefined;
-    formData.value = getDefaultFormData();
+    formData.value = getDefaultFormData(shellDefaults.value);
     isCreating.value = true;
   };
 
   const cancelEdit = () => {
     selectedPaneId.value = undefined;
     isCreating.value = false;
-    formData.value = getDefaultFormData();
+    formData.value = getDefaultFormData(shellDefaults.value);
   };
 
   const canSave = computed(() => {
@@ -161,7 +183,7 @@ export const useForm = () => {
               type: "command",
               command: data.command,
               timeout: data.timeout,
-              shell: data.shell.trim() || "/bin/bash",
+              shell: data.shell.trim() || shellDefaults.value.shell,
               shellConfig: data.shellConfig.trim() || undefined,
             },
       codeBlock: data.codeBlock || undefined,

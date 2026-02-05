@@ -154,3 +154,54 @@ export type AvailableVariable = {
   description: string;
   example: string;
 };
+
+export type ShellDefaults = {
+  shell: string;
+  shellConfig: string;
+};
+
+function getPlatform(): string | undefined {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const proc = (globalThis as any).process;
+    if (
+      proc !== null &&
+      proc !== undefined &&
+      typeof proc.platform === "string"
+    ) {
+      return proc.platform;
+    }
+    return undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function getDefaultShell(): string {
+  const platform = getPlatform();
+  if (platform === "win32") {
+    return "powershell.exe";
+  }
+  if (platform === "darwin") {
+    return "/bin/zsh";
+  }
+  return "/bin/bash";
+}
+
+export function getDefaultShellConfig(): string {
+  const platform = getPlatform();
+  if (platform === "win32") {
+    return "";
+  }
+  if (platform === "darwin") {
+    return "~/.zshrc";
+  }
+  return "~/.bashrc";
+}
+
+export function getShellDefaults(): ShellDefaults {
+  return {
+    shell: getDefaultShell(),
+    shellConfig: getDefaultShellConfig(),
+  };
+}
