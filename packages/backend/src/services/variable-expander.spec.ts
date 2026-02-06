@@ -152,4 +152,52 @@ describe("expandVariables", () => {
 
     expect(result).toContain("'http'");
   });
+
+  it("should use PowerShell escaping for PowerShell shell", () => {
+    const request = createMockRequest();
+    const command = "echo {{input}}";
+    const result = expandVariables(
+      command,
+      {
+        input: "test'data",
+        request,
+        requestId: "req_123",
+      },
+      "powershell.exe",
+    );
+
+    expect(result).toContain("'test''data'");
+  });
+
+  it("should use CMD escaping for cmd.exe shell", () => {
+    const request = createMockRequest();
+    const command = "echo {{input}}";
+    const result = expandVariables(
+      command,
+      {
+        input: 'test"data',
+        request,
+        requestId: "req_123",
+      },
+      "cmd.exe",
+    );
+
+    expect(result).toContain('"test""data"');
+  });
+
+  it("should use Unix escaping for bash shell", () => {
+    const request = createMockRequest();
+    const command = "echo {{input}}";
+    const result = expandVariables(
+      command,
+      {
+        input: "test'data",
+        request,
+        requestId: "req_123",
+      },
+      "/bin/bash",
+    );
+
+    expect(result).toContain("'test'\\''data'");
+  });
 });

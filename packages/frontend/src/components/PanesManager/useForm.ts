@@ -4,6 +4,7 @@ import type {
   PaneInput,
   PaneLocation,
   PaneScope,
+  ShellDefaults,
   TransformationType,
   WorkflowInfo,
 } from "shared";
@@ -12,33 +13,56 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useSDK } from "@/plugins/sdk";
 import { usePanesStore } from "@/stores/panes";
 
-const getDefaultFormData = (): PaneFormData => ({
-  name: "",
-  tabName: "",
-  description: "",
-  enabled: true,
-  scope: "project",
-  input: "response.body",
-  httpql: "",
-  locations: ["http-history", "replay"],
-  transformationType: "workflow",
-  workflowId: "",
-  command: "",
-  timeout: 30,
-  codeBlock: false,
-  language: "json",
-});
+const getDefaultFormData = (shellDefaults: ShellDefaults): PaneFormData => {
+  return {
+    name: "",
+    tabName: "",
+    description: "",
+    enabled: true,
+    scope: "project",
+    input: "response.body",
+    httpql: "",
+    locations: ["http-history", "replay"],
+    transformationType: "workflow",
+    workflowId: "",
+    command: "",
+    timeout: 30,
+    shell: shellDefaults.shell,
+    shellConfig: shellDefaults.shellConfig,
+    codeBlock: false,
+    language: "json",
+    devMode: false,
+  };
+};
 
 export const useForm = () => {
   const sdk = useSDK();
   const store = usePanesStore();
 
+  const shellDefaults = ref<ShellDefaults>({
+    shell: "/bin/bash",
+    shellConfig: "~/.bashrc",
+  });
   const selectedPaneId = ref<string | undefined>(undefined);
   const isCreating = ref(false);
-  const formData = ref<PaneFormData>(getDefaultFormData());
+  const formData = ref<PaneFormData>(getDefaultFormData(shellDefaults.value));
   const workflows = ref<WorkflowInfo[]>([]);
   const workflowsLoading = ref(false);
   const workflowsError = ref<string | undefined>(undefined);
+
+  const fetchShellDefaults = async () => {
+    const result = await sdk.backend.getShellDefaults();
+    if (result.kind === "Success") {
+      shellDefaults.value = result.value;
+      if (
+        formData.value.shell === "/bin/bash" &&
+        formData.value.shellConfig === "~/.bashrc"
+      ) {
+        formData.value.shell = result.value.shell;
+        formData.value.shellConfig = result.value.shellConfig;
+      }
+    }
+  };
 
   const fetchWorkflows = async () => {
     workflowsLoading.value = true;
@@ -56,6 +80,7 @@ export const useForm = () => {
   };
 
   onMounted(() => {
+    fetchShellDefaults();
     fetchWorkflows();
   });
 
@@ -70,7 +95,7 @@ export const useForm = () => {
 
   watch(selectedPaneId, (id) => {
     if (id === undefined) {
-      formData.value = getDefaultFormData();
+      formData.value = getDefaultFormData(shellDefaults.value);
       return;
     }
     const pane = store.getPaneById(id);
@@ -98,8 +123,17 @@ export const useForm = () => {
         pane.transformation.type === "command"
           ? (pane.transformation.timeout ?? 30)
           : 30,
+      shell:
+        pane.transformation.type === "command"
+          ? (pane.transformation.shell ?? shellDefaults.value.shell)
+          : shellDefaults.value.shell,
+      shellConfig:
+        pane.transformation.type === "command"
+          ? (pane.transformation.shellConfig ?? shellDefaults.value.shellConfig)
+          : shellDefaults.value.shellConfig,
       codeBlock: pane.codeBlock ?? false,
       language: pane.language ?? "json",
+      devMode: pane.devMode ?? false,
     };
     isCreating.value = false;
   });
@@ -111,14 +145,14 @@ export const useForm = () => {
 
   const startCreate = () => {
     selectedPaneId.value = undefined;
-    formData.value = getDefaultFormData();
+    formData.value = getDefaultFormData(shellDefaults.value);
     isCreating.value = true;
   };
 
   const cancelEdit = () => {
     selectedPaneId.value = undefined;
     isCreating.value = false;
-    formData.value = getDefaultFormData();
+    formData.value = getDefaultFormData(shellDefaults.value);
   };
 
   const canSave = computed(() => {
@@ -147,9 +181,16 @@ export const useForm = () => {
       transformation:
         data.transformationType === "workflow"
           ? { type: "workflow", workflowId: data.workflowId }
-          : { type: "command", command: data.command, timeout: data.timeout },
-      codeBlock: data.codeBlock || undefined,
+          : {
+              type: "command",
+              command: data.command,
+              timeout: data.timeout,
+              shell: data.shell.trim() || shellDefaults.value.shell,
+              shellConfig: data.shellConfig.trim() || undefined,
+            },
+      codeBlock: data.codeBlock,
       language: data.codeBlock ? data.language : undefined,
+      devMode: data.devMode,
     };
   };
 
@@ -178,14 +219,27 @@ export const useForm = () => {
     }
   };
 
-  const inputOptions: { label: string; value: PaneInput }[] = [
-    { label: "Request Body", value: "request.body" },
-    { label: "Request Headers", value: "request.headers" },
-    { label: "Request Query", value: "request.query" },
-    { label: "Request Raw", value: "request.raw" },
-    { label: "Response Body", value: "response.body" },
-    { label: "Response Headers", value: "response.headers" },
-    { label: "Response Raw", value: "response.raw" },
+  const inputOptions: {
+    label: string;
+    items: { label: string; value: PaneInput }[];
+  }[] = [
+    {
+      label: "Request",
+      items: [
+        { label: "Request Body", value: "request.body" },
+        { label: "Request Headers", value: "request.headers" },
+        { label: "Request Query", value: "request.query" },
+        { label: "Request Raw", value: "request.raw" },
+      ],
+    },
+    {
+      label: "Response",
+      items: [
+        { label: "Response Body", value: "response.body" },
+        { label: "Response Headers", value: "response.headers" },
+        { label: "Response Raw", value: "response.raw" },
+      ],
+    },
   ];
 
   const locationOptions: { label: string; value: PaneLocation }[] = [

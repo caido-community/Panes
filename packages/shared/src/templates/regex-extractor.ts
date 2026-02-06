@@ -1,4 +1,5 @@
 import type { CreatePaneInput } from "../types";
+import { getDefaultShell, getDefaultShellConfig } from "../types";
 
 export const regexExtractorTemplate: CreatePaneInput = {
   name: "Pattern Extractor",
@@ -80,6 +81,8 @@ END {
   }
 }'`,
     timeout: 30,
+    shell: getDefaultShell(),
+    shellConfig: getDefaultShellConfig(),
   },
   codeBlock: true,
   language: "text",

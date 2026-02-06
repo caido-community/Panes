@@ -50,6 +50,7 @@ export const AVAILABLE_VARIABLES: AvailableVariable[] = [
 export function expandVariables(
   command: string,
   context: VariableContext,
+  shell: string = "/bin/bash",
 ): string {
   const { input, request, response, requestId } = context;
 
@@ -87,7 +88,7 @@ export function expandVariables(
 
   for (const [key, value] of Object.entries(variables)) {
     if (expanded.includes(key)) {
-      expanded = expanded.replaceAll(key, escapeForShell(value));
+      expanded = expanded.replaceAll(key, escapeForShell(value, shell));
     }
   }
 
@@ -105,9 +106,24 @@ export function expandVariables(
   return expanded;
 }
 
-function escapeForShell(arg: string): string {
+function escapeForShell(arg: string, shell: string = "/bin/bash"): string {
+  const shellName = shell.toLowerCase();
+  const isWindows =
+    shellName.includes("powershell") ||
+    shellName.includes("pwsh") ||
+    shellName.includes("cmd");
+
   if (arg === "") {
-    return "''";
+    return isWindows ? '""' : "''";
+  }
+
+  if (isWindows) {
+    if (shellName.includes("cmd")) {
+      const escaped = arg.replace(/"/g, '""');
+      return `"${escaped}"`;
+    }
+    const escaped = arg.replace(/'/g, "''");
+    return `'${escaped}'`;
   }
 
   const escaped = arg.replace(/'/g, "'\\''");

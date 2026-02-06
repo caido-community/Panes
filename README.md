@@ -49,11 +49,27 @@ The project is organized into distinct packages: `backend`, `frontend`, and `sha
 ### Pane Definition
 
 A pane consists of:
+
 - **Input Source**: What data to transform (request body, response headers, etc.)
 - **Locations**: Where the pane tab appears (HTTP History, Replay, Sitemap, etc.)
 - **Transformation**: Either a Convert Workflow or a Shell Command
 - **HTTPQL Filter**: Optional filter to limit when the pane runs
 - **Code Block**: Optional syntax highlighting for the output
+
+### Development Setup
+
+From the repo root:
+
+```bash
+pnpm install
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm build
+```
+
+- **`pnpm watch`** – Build the plugin in watch mode for local development with Caido.
+- **Shell defaults** – Shell and shell config are detected by platform (Linux: `/bin/bash` + `~/.bashrc`, macOS: `/bin/zsh` + `~/.zshrc`, Windows: `powershell.exe`). Use `getDefaultShell()` and `getDefaultShellConfig()` from `shared` in templates and when building pane config so it works cross-platform.
 
 ### Adding a New Pane Template
 
@@ -65,6 +81,7 @@ Create a new template file in `packages/shared/src/templates/`:
 
 ```ts
 import type { CreatePaneInput } from "../types";
+import { getDefaultShell, getDefaultShellConfig } from "../types";
 
 export const myTemplate: CreatePaneInput = {
   name: "My Template",
@@ -78,11 +95,15 @@ export const myTemplate: CreatePaneInput = {
     type: "command",
     command: "my-command",
     timeout: 30,
+    shell: getDefaultShell(),
+    shellConfig: getDefaultShellConfig(),
   },
   codeBlock: true,
   language: "json",
 };
 ```
+
+Use `getDefaultShell()` and `getDefaultShellConfig()` so the template works on Windows, macOS, and Linux.
 
 #### 2) Register Template
 

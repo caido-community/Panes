@@ -8,10 +8,13 @@ import { python } from "@codemirror/lang-python";
 import { sql } from "@codemirror/lang-sql";
 import { xml } from "@codemirror/lang-xml";
 import { yaml } from "@codemirror/lang-yaml";
+import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
 import { EditorState } from "@codemirror/state";
 import { oneDark } from "@codemirror/theme-one-dark";
-import { EditorView } from "@codemirror/view";
+import { EditorView, keymap } from "@codemirror/view";
 import { onMounted, onUnmounted, ref, watch } from "vue";
+
+import { SearchExt } from "./search";
 
 const props = defineProps<{
   content: string;
@@ -63,31 +66,60 @@ function createEditor() {
   const languageSupport = getLanguageSupport(props.language);
   const extensions = [
     EditorState.readOnly.of(true),
+    EditorView.lineWrapping,
+    keymap.of(searchKeymap),
+    ...SearchExt.create(),
+    highlightSelectionMatches(),
     EditorView.theme({
       "&": {
         height: "100%",
+        minWidth: "0 !important",
+        width: "100%",
         fontSize: "13px",
         backgroundColor: "transparent",
+        overflow: "hidden",
+      },
+      "&.cm-editor": {
+        minWidth: "0 !important",
       },
       ".cm-content": {
-        padding: "16px",
+        padding: "12px",
         minHeight: "100%",
+        minWidth: "0 !important",
+        width: "100%",
         backgroundColor: "transparent",
+        wordBreak: "break-all",
+        overflowWrap: "anywhere",
       },
       ".cm-scroller": {
         overflow: "auto",
+        minWidth: "0 !important",
         backgroundColor: "transparent",
       },
-      ".cm-editor": {
-        height: "100%",
-        backgroundColor: "transparent",
+      ".cm-sizer": {
+        minWidth: "0 !important",
       },
-      ".cm-editor .cm-scroller": {
-        height: "100%",
-        backgroundColor: "transparent",
+      ".cm-line": {
+        wordBreak: "break-all",
+        overflowWrap: "anywhere",
+        minWidth: "0 !important",
       },
-      ".cm-focused": {
-        outline: "none",
+      ".cm-lineWrapping": {
+        whiteSpace: "pre-wrap",
+        wordBreak: "break-all",
+        overflowWrap: "anywhere",
+      },
+      ".cm-panels": {
+        backgroundColor: "var(--c-bg-subtle, #09090b)",
+        border: "none !important",
+      },
+      ".cm-panels.cm-panels-top": {
+        borderTop: "none !important",
+        borderBottom: "none !important",
+      },
+      ".cm-search": {
+        display: "block",
+        padding: "0",
       },
     }),
   ];

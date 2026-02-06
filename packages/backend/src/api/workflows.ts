@@ -1,7 +1,7 @@
 import { spawn } from "child_process";
 
 import type { Result, WorkflowInfo, WorkflowValidationResult } from "shared";
-import { error, ok } from "shared";
+import { error, getDefaultShell, getDefaultShellConfig, ok } from "shared";
 
 import { requireSDK } from "../sdk";
 import { expandVariables } from "../services/variable-expander";
@@ -270,12 +270,59 @@ async function driveChild(
   return output;
 }
 
+function getShellArgs(shell: string): string[] {
+  const shellName = shell.toLowerCase();
+  if (shellName.includes("cmd")) {
+    return ["/C"];
+  }
+  if (shellName.includes("powershell") || shellName.includes("pwsh")) {
+    return ["-Command"];
+  }
+  return ["-c"];
+}
+
+function buildInitScript(shell: string, shellConfig: string): string {
+  if (!shellConfig.trim()) {
+    return "";
+  }
+
+  const shellName = shell.toLowerCase();
+
+  if (shellName.includes("cmd")) {
+    return "";
+  }
+
+  if (shellName.includes("powershell") || shellName.includes("pwsh")) {
+    return `. "${shellConfig}" 2>$null`;
+  }
+
+  return `source "${shellConfig}" > /dev/null 2>&1 || true`;
+}
+
+function buildFullScript(
+  shell: string,
+  initScript: string,
+  command: string,
+): string {
+  if (!initScript) {
+    return command;
+  }
+
+  const shellName = shell.toLowerCase();
+
+  const separator = shellName.includes("cmd") ? "\r\n" : "\n";
+
+  return `${initScript}${separator}${command}`;
+}
+
 export async function runCommand(
   _sdk: BackendSDK,
   command: string,
   input: string,
   timeout: number,
   requestId: string,
+  shell: string = getDefaultShell(),
+  shellConfig: string = getDefaultShellConfig(),
 ): Promise<Result<string>> {
   const sdk = requireSDK();
 
@@ -286,14 +333,21 @@ export async function runCommand(
 
   const { request, response } = requestResult;
 
+  const actualShell = shell.trim() || getDefaultShell();
+  const actualShellConfig = shellConfig.trim() || getDefaultShellConfig();
+
   let expandedCommand: string;
   try {
-    expandedCommand = expandVariables(command, {
-      input,
-      request,
-      response,
-      requestId,
-    });
+    expandedCommand = expandVariables(
+      command,
+      {
+        input,
+        request,
+        response,
+        requestId,
+      },
+      actualShell,
+    );
   } catch (err) {
     return error(
       err instanceof Error
@@ -304,9 +358,12 @@ export async function runCommand(
 
   const timeoutMs = Math.max(0, Math.min(86400000, timeout * 1000));
 
+  const initScript = buildInitScript(actualShell, actualShellConfig);
+  const fullScript = buildFullScript(actualShell, initScript, expandedCommand);
+  const shellArgs = getShellArgs(actualShell);
+
   try {
-    const child = spawn(expandedCommand, [], {
-      shell: true,
+    const child = spawn(actualShell, [...shellArgs, fullScript], {
       stdio: ["pipe", "pipe", "pipe"],
     });
 

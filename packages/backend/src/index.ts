@@ -12,6 +12,7 @@ import {
   togglePane,
   updatePane,
 } from "./api/panes";
+import { getPlatform, getShellDefaults } from "./api/system";
 import { getActivePanesForLocation, getPaneInputData } from "./api/transform";
 import {
   getConvertWorkflows,
@@ -44,6 +45,8 @@ export type API = DefineAPI<{
   validateWorkflows: typeof validateWorkflows;
   getTemplates: typeof getTemplates;
   installTemplate: typeof installTemplate;
+  getPlatform: typeof getPlatform;
+  getShellDefaults: typeof getShellDefaults;
 }>;
 
 export async function init(sdk: BackendSDK) {
@@ -69,6 +72,8 @@ export async function init(sdk: BackendSDK) {
   sdk.api.register("validateWorkflows", validateWorkflows);
   sdk.api.register("getTemplates", getTemplates);
   sdk.api.register("installTemplate", installTemplate);
+  sdk.api.register("getPlatform", getPlatform);
+  sdk.api.register("getShellDefaults", getShellDefaults);
 
   sdk.events.onProjectChange(async (_, project) => {
     const projectId = project?.getId();

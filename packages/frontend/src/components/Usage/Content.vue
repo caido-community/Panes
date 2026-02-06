@@ -248,7 +248,47 @@
               <div class="text-surface-300 text-xs mt-1">Decode base64</div>
             </div>
           </div>
-          <p class="text-surface-300 text-sm">
+          <div class="mt-3 border-l-4 border-green-500 pl-3">
+            <div class="font-semibold text-sm mb-2">Shell Configuration</div>
+            <p class="text-surface-300 text-sm mb-2">
+              The shell is automatically detected based on your operating
+              system:
+            </p>
+            <ul class="text-surface-300 text-sm space-y-1">
+              <li>
+                <strong>Linux:</strong>
+                <code class="px-1.5 py-0.5 bg-surface-800 rounded text-xs"
+                  >/bin/bash</code
+                >
+                with
+                <code class="px-1.5 py-0.5 bg-surface-800 rounded text-xs"
+                  >~/.bashrc</code
+                >
+              </li>
+              <li>
+                <strong>macOS:</strong>
+                <code class="px-1.5 py-0.5 bg-surface-800 rounded text-xs"
+                  >/bin/zsh</code
+                >
+                with
+                <code class="px-1.5 py-0.5 bg-surface-800 rounded text-xs"
+                  >~/.zshrc</code
+                >
+              </li>
+              <li>
+                <strong>Windows:</strong>
+                <code class="px-1.5 py-0.5 bg-surface-800 rounded text-xs"
+                  >powershell.exe</code
+                >
+                (no config file)
+              </li>
+            </ul>
+            <p class="text-surface-300 text-xs mt-2">
+              You can override these defaults in the shell configuration fields
+              if needed.
+            </p>
+          </div>
+          <p class="text-surface-300 text-sm mt-3">
             Commands support variable expansion (see
             <strong>Command Variables</strong>
             section). Set a timeout (default 30 seconds) to prevent commands

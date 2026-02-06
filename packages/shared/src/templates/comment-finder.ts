@@ -1,4 +1,5 @@
 import type { CreatePaneInput } from "../types";
+import { getDefaultShell, getDefaultShellConfig } from "../types";
 
 export const commentFinderTemplate: CreatePaneInput = {
   name: "Comment Finder",
@@ -99,6 +100,8 @@ else:
     print(f'---\\nTotal: {total} comments found')
 "`,
     timeout: 30,
+    shell: getDefaultShell(),
+    shellConfig: getDefaultShellConfig(),
   },
   codeBlock: true,
   language: "text",
