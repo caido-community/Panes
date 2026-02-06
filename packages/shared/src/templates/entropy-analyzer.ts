@@ -1,4 +1,5 @@
 import type { CreatePaneInput } from "../types";
+import { getDefaultShell, getDefaultShellConfig } from "../types";
 
 export const entropyAnalyzerTemplate: CreatePaneInput = {
   name: "Entropy Analyzer",
@@ -103,8 +104,8 @@ bar = '[' + '#' * filled + '-' * (bar_length - filled) + ']'
 print(f'\\nEntropy: {bar} {total_entropy:.2f}/8.00')
 "`,
     timeout: 30,
-    shell: "/bin/bash",
-    shellConfig: "~/.bashrc",
+    shell: getDefaultShell(),
+    shellConfig: getDefaultShellConfig(),
   },
   codeBlock: true,
   language: "text",

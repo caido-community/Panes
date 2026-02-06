@@ -1,4 +1,5 @@
 import type { CreatePaneInput } from "../types";
+import { getDefaultShell, getDefaultShellConfig } from "../types";
 
 export const jqTemplate: CreatePaneInput = {
   name: "jq - JSON Processor",
@@ -13,8 +14,8 @@ export const jqTemplate: CreatePaneInput = {
     type: "command",
     command: "jq .",
     timeout: 30,
-    shell: "/bin/bash",
-    shellConfig: "~/.bashrc",
+    shell: getDefaultShell(),
+    shellConfig: getDefaultShellConfig(),
   },
   codeBlock: true,
   language: "json",
