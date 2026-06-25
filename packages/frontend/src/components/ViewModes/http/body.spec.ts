@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { bodyStart, parseBody } from "./httpBody";
+import { bodyStart, parseBody } from "./body";
 
 const request = (headers: string, body: string): string =>
   `POST /x HTTP/1.1\r\n${headers}\r\n\r\n${body}`;

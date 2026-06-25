@@ -117,7 +117,6 @@ export function isResponseInput(input: PaneInput): boolean {
 
 export function isFoldableLanguage(language: string): boolean {
   return (
-    language !== "http" &&
     language !== "bash" &&
     language !== "shell" &&
     language !== "sh" &&

@@ -10,13 +10,15 @@ import { xml } from "@codemirror/lang-xml";
 import { yaml } from "@codemirror/lang-yaml";
 import {
   codeFolding as codeFoldingExtension,
+  defaultHighlightStyle,
   foldGutter,
   StreamLanguage,
+  syntaxHighlighting,
 } from "@codemirror/language";
 import { http } from "@codemirror/legacy-modes/mode/http";
 import { shell } from "@codemirror/legacy-modes/mode/shell";
 import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
-import { EditorState } from "@codemirror/state";
+import { EditorState, type Extension } from "@codemirror/state";
 import { oneDark } from "@codemirror/theme-one-dark";
 import {
   EditorView,
@@ -27,6 +29,7 @@ import {
 } from "@codemirror/view";
 import { onMounted, onUnmounted, ref, watch } from "vue";
 
+import { httpBodyFold, httpBodyHighlight } from "./http";
 import { SearchExt } from "./search";
 
 const props = defineProps<{
@@ -82,7 +85,7 @@ function createEditor() {
   if (container.value === undefined) return;
 
   const languageSupport = getLanguageSupport(props.language);
-  const extensions = [
+  const extensions: Extension[] = [
     EditorState.readOnly.of(true),
     EditorView.lineWrapping,
     keymap.of(searchKeymap),
@@ -179,6 +182,16 @@ function createEditor() {
   const isDark = document.documentElement.getAttribute("data-mode") === "dark";
   if (isDark) {
     extensions.push(oneDark);
+  }
+  if (!isDark) {
+    extensions.push(syntaxHighlighting(defaultHighlightStyle));
+  }
+
+  if (props.language === "http") {
+    extensions.push(httpBodyHighlight(isDark));
+    if (props.codeFolding) {
+      extensions.push(httpBodyFold());
+    }
   }
 
   const state = EditorState.create({

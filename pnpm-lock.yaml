@@ -102,6 +102,12 @@ importers:
       '@codemirror/view':
         specifier: 6.39.12
         version: 6.39.12
+      '@lezer/common':
+        specifier: 1.5.0
+        version: 1.5.0
+      '@lezer/highlight':
+        specifier: 1.2.3
+        version: 1.2.3
       pinia:
         specifier: ^2.1.7
         version: 2.3.1(typescript@5.5.4)(vue@3.4.37(typescript@5.5.4))
