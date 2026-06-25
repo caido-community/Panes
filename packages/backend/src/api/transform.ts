@@ -1,7 +1,17 @@
-import type { InputData, Pane, PaneLocation, Result } from "shared";
+import type {
+  InputData,
+  Pane,
+  PaneLocation,
+  Result,
+  ScriptContext,
+} from "shared";
 import { ok } from "shared";
 
-import { getEnabledPanesForLocation, getInputData } from "../services/executor";
+import {
+  getEnabledPanesForLocation,
+  getInputData,
+  getScriptContext as resolveScriptContext,
+} from "../services/executor";
 import type { BackendSDK } from "../types";
 
 export function getPaneInputData(
@@ -10,6 +20,14 @@ export function getPaneInputData(
   requestId: string,
 ): Promise<Result<InputData>> {
   return getInputData(paneId, requestId);
+}
+
+export function getScriptContext(
+  _sdk: BackendSDK,
+  paneId: string,
+  requestId: string,
+): Promise<Result<ScriptContext>> {
+  return resolveScriptContext(paneId, requestId);
 }
 
 export function getActivePanesForLocation(

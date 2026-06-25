@@ -150,7 +150,7 @@ const getShortLocationLabel = (location: PaneLocation): string => {
             {{ getWorkflowStatus(data)?.workflowName ?? "Loading..." }}
           </span>
         </div>
-        <span v-else class="text-sm text-surface-500">—</span>
+        <span v-else class="text-sm text-surface-500">-</span>
       </template>
     </Column>
 

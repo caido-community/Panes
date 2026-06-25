@@ -13,7 +13,11 @@ import {
   updatePane,
 } from "./api/panes";
 import { getPlatform, getShellDefaults } from "./api/system";
-import { getActivePanesForLocation, getPaneInputData } from "./api/transform";
+import {
+  getActivePanesForLocation,
+  getPaneInputData,
+  getScriptContext,
+} from "./api/transform";
 import {
   getConvertWorkflows,
   getWorkflows,
@@ -37,6 +41,7 @@ export type API = DefineAPI<{
   exportPanes: typeof exportPanes;
   importPanes: typeof importPanes;
   getPaneInputData: typeof getPaneInputData;
+  getScriptContext: typeof getScriptContext;
   getActivePanesForLocation: typeof getActivePanesForLocation;
   getWorkflows: typeof getWorkflows;
   getConvertWorkflows: typeof getConvertWorkflows;
@@ -64,6 +69,7 @@ export async function init(sdk: BackendSDK) {
   sdk.api.register("exportPanes", exportPanes);
   sdk.api.register("importPanes", importPanes);
   sdk.api.register("getPaneInputData", getPaneInputData);
+  sdk.api.register("getScriptContext", getScriptContext);
   sdk.api.register("getActivePanesForLocation", getActivePanesForLocation);
   sdk.api.register("getWorkflows", getWorkflows);
   sdk.api.register("getConvertWorkflows", getConvertWorkflows);

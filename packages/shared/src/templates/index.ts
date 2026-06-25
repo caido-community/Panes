@@ -2,6 +2,7 @@ import type { CreatePaneInput } from "../types";
 
 import { commentFinderTemplate } from "./comment-finder";
 import { entropyAnalyzerTemplate } from "./entropy-analyzer";
+import { hideHeadersTemplate } from "./hide-headers";
 import { jqTemplate } from "./jq";
 import { regexExtractorTemplate } from "./regex-extractor";
 
@@ -14,6 +15,7 @@ export const PANE_TEMPLATES: PaneTemplate[] = [
   { ...regexExtractorTemplate, templateId: "regex-extractor" },
   { ...commentFinderTemplate, templateId: "comment-finder" },
   { ...entropyAnalyzerTemplate, templateId: "entropy-analyzer" },
+  { ...hideHeadersTemplate, templateId: "hide-headers" },
 ];
 
 export function getTemplateById(templateId: string): PaneTemplate | undefined {

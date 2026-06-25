@@ -1,5 +1,5 @@
 import type { Request, Response } from "caido:utils";
-import type { InputData, Pane, PaneInput, Result } from "shared";
+import type { InputData, Pane, PaneInput, Result, ScriptContext } from "shared";
 import { error, ok } from "shared";
 
 import { requireSDK } from "../sdk";
@@ -48,10 +48,17 @@ function matchesHttpql(
   }
 }
 
-export async function getInputData(
+type ResolvedInput = {
+  pane: Pane;
+  request: Request;
+  response: Response | undefined;
+  input: string;
+};
+
+async function resolvePaneInput(
   paneId: string,
   requestId: string,
-): Promise<Result<InputData>> {
+): Promise<Result<ResolvedInput>> {
   const sdk = requireSDK();
   const pane = panesStore.getPane(paneId);
 
@@ -83,19 +90,45 @@ export async function getInputData(
     return error("No input data available");
   }
 
-  const transformation =
-    pane.transformation.type === "workflow"
-      ? {
-          type: "workflow" as const,
-          workflowId: pane.transformation.workflowId,
-        }
-      : { type: "command" as const, command: pane.transformation.command };
+  return ok({ pane, request, response, input });
+}
 
+export async function getInputData(
+  paneId: string,
+  requestId: string,
+): Promise<Result<InputData>> {
+  const resolved = await resolvePaneInput(paneId, requestId);
+  if (resolved.kind === "Error") {
+    return resolved;
+  }
+
+  const { pane, input } = resolved.value;
+  return ok({ input, paneId: pane.id, paneName: pane.name });
+}
+
+export async function getScriptContext(
+  paneId: string,
+  requestId: string,
+): Promise<Result<ScriptContext>> {
+  const resolved = await resolvePaneInput(paneId, requestId);
+  if (resolved.kind === "Error") {
+    return resolved;
+  }
+
+  const { request, response, input } = resolved.value;
   return ok({
     input,
-    paneId: pane.id,
-    paneName: pane.name,
-    transformation,
+    requestId,
+    host: request.getHost(),
+    port: request.getPort(),
+    path: request.getPath(),
+    method: request.getMethod(),
+    url: request.getUrl(),
+    scheme: request.getTls() ? "https" : "http",
+    query: request.getQuery(),
+    responseCode: response?.getCode(),
+    responseLength:
+      response !== undefined ? response.getRaw().toText().length : undefined,
   });
 }
 
