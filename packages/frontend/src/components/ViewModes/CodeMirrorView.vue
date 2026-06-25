@@ -14,7 +14,11 @@ import { shell } from "@codemirror/legacy-modes/mode/shell";
 import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
 import { EditorState } from "@codemirror/state";
 import { oneDark } from "@codemirror/theme-one-dark";
-import { EditorView, keymap } from "@codemirror/view";
+import {
+  EditorView,
+  keymap,
+  lineNumbers as lineNumbersExtension,
+} from "@codemirror/view";
 import { onMounted, onUnmounted, ref, watch } from "vue";
 
 import { SearchExt } from "./search";
@@ -22,6 +26,7 @@ import { SearchExt } from "./search";
 const props = defineProps<{
   content: string;
   language: string;
+  lineNumbers: boolean;
 }>();
 
 const container = ref<HTMLElement | undefined>(undefined);
@@ -114,6 +119,13 @@ function createEditor() {
         wordBreak: "break-all",
         overflowWrap: "anywhere",
       },
+      ".cm-gutters": {
+        backgroundColor: "transparent",
+        border: "none",
+      },
+      ".cm-activeLineGutter": {
+        backgroundColor: "transparent",
+      },
       ".cm-panels": {
         backgroundColor: "var(--c-bg-subtle, #09090b)",
         border: "none !important",
@@ -131,6 +143,10 @@ function createEditor() {
 
   if (languageSupport !== null) {
     extensions.push(languageSupport);
+  }
+
+  if (props.lineNumbers) {
+    extensions.push(lineNumbersExtension());
   }
 
   const isDark = document.documentElement.getAttribute("data-mode") === "dark";
@@ -160,7 +176,7 @@ function updateContent() {
   });
 }
 
-function updateLanguage() {
+function recreateEditor() {
   if (view === undefined || container.value === undefined) return;
   view.destroy();
   createEditor();
@@ -177,7 +193,8 @@ onUnmounted(() => {
 });
 
 watch(() => props.content, updateContent);
-watch(() => props.language, updateLanguage);
+watch(() => props.language, recreateEditor);
+watch(() => props.lineNumbers, recreateEditor);
 </script>
 
 <template>

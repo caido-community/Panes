@@ -47,6 +47,7 @@ export type Pane = {
   templateId?: string;
   codeBlock?: boolean;
   language?: string;
+  lineNumbers?: boolean;
   devMode?: boolean;
 };
 
@@ -71,6 +72,7 @@ export type PaneFormData = {
   shellConfig: string;
   codeBlock: boolean;
   language: string;
+  lineNumbers: boolean;
   devMode: boolean;
 };
 

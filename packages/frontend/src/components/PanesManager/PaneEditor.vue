@@ -363,6 +363,15 @@ const languageOptions = [
           @update:model-value="updateField('language', $event)"
         />
       </div>
+
+      <div v-if="form.codeBlock" class="flex items-center gap-2">
+        <Checkbox
+          :model-value="form.lineNumbers"
+          binary
+          @update:model-value="updateField('lineNumbers', $event)"
+        />
+        <label class="text-sm font-medium cursor-pointer">Line Numbers</label>
+      </div>
     </div>
 
     <div class="flex-1" />

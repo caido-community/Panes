@@ -31,6 +31,7 @@ const getDefaultFormData = (shellDefaults: ShellDefaults): PaneFormData => {
     shellConfig: shellDefaults.shellConfig,
     codeBlock: false,
     language: "json",
+    lineNumbers: false,
     devMode: false,
   };
 };
@@ -133,6 +134,7 @@ export const useForm = () => {
           : shellDefaults.value.shellConfig,
       codeBlock: pane.codeBlock ?? false,
       language: pane.language ?? "json",
+      lineNumbers: pane.lineNumbers ?? false,
       devMode: pane.devMode ?? false,
     };
     isCreating.value = false;
@@ -190,6 +192,7 @@ export const useForm = () => {
             },
       codeBlock: data.codeBlock,
       language: data.codeBlock ? data.language : undefined,
+      lineNumbers: data.codeBlock ? data.lineNumbers : undefined,
       devMode: data.devMode,
     };
   };
