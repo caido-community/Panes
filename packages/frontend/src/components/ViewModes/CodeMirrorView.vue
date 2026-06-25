@@ -8,6 +8,9 @@ import { python } from "@codemirror/lang-python";
 import { sql } from "@codemirror/lang-sql";
 import { xml } from "@codemirror/lang-xml";
 import { yaml } from "@codemirror/lang-yaml";
+import { StreamLanguage } from "@codemirror/language";
+import { http } from "@codemirror/legacy-modes/mode/http";
+import { shell } from "@codemirror/legacy-modes/mode/shell";
 import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
 import { EditorState } from "@codemirror/state";
 import { oneDark } from "@codemirror/theme-one-dark";
@@ -51,10 +54,12 @@ function getLanguageSupport(lang: string) {
     case "markdown":
     case "md":
       return markdown();
+    case "http":
+      return StreamLanguage.define(http);
     case "bash":
     case "shell":
     case "sh":
-      return javascript();
+      return StreamLanguage.define(shell);
     default:
       return null;
   }

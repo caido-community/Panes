@@ -61,6 +61,7 @@ const isLocationSelected = (location: PaneLocation) => {
 };
 
 const languageOptions = [
+  { label: "HTTP", value: "http" },
   { label: "JSON", value: "json" },
   { label: "JavaScript", value: "javascript" },
   { label: "TypeScript", value: "typescript" },
