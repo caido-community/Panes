@@ -52,6 +52,8 @@ const pane = computed(() => {
           pane?.codeBlock === true && pane.language ? pane.language : 'text'
         "
         :line-numbers="pane?.lineNumbers === true"
+        :code-folding="pane?.codeFolding === true"
+        :highlight-whitespace="pane?.highlightWhitespace === true"
       />
     </div>
   </div>

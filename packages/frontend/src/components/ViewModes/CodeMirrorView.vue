@@ -8,7 +8,11 @@ import { python } from "@codemirror/lang-python";
 import { sql } from "@codemirror/lang-sql";
 import { xml } from "@codemirror/lang-xml";
 import { yaml } from "@codemirror/lang-yaml";
-import { StreamLanguage } from "@codemirror/language";
+import {
+  codeFolding as codeFoldingExtension,
+  foldGutter,
+  StreamLanguage,
+} from "@codemirror/language";
 import { http } from "@codemirror/legacy-modes/mode/http";
 import { shell } from "@codemirror/legacy-modes/mode/shell";
 import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
@@ -16,6 +20,8 @@ import { EditorState } from "@codemirror/state";
 import { oneDark } from "@codemirror/theme-one-dark";
 import {
   EditorView,
+  highlightActiveLine,
+  highlightWhitespace as highlightWhitespaceExtension,
   keymap,
   lineNumbers as lineNumbersExtension,
 } from "@codemirror/view";
@@ -27,6 +33,8 @@ const props = defineProps<{
   content: string;
   language: string;
   lineNumbers: boolean;
+  codeFolding: boolean;
+  highlightWhitespace: boolean;
 }>();
 
 const container = ref<HTMLElement | undefined>(undefined);
@@ -80,6 +88,7 @@ function createEditor() {
     keymap.of(searchKeymap),
     ...SearchExt.create(),
     highlightSelectionMatches(),
+    highlightActiveLine(),
     EditorView.theme({
       "&": {
         height: "100%",
@@ -123,8 +132,18 @@ function createEditor() {
         backgroundColor: "transparent",
         border: "none",
       },
+      ".cm-activeLine": {
+        backgroundColor: "rgba(0, 0, 0, 0.3) !important",
+      },
       ".cm-activeLineGutter": {
-        backgroundColor: "transparent",
+        backgroundColor: "rgba(0, 0, 0, 0.3) !important",
+      },
+      ".cm-highlightSpace": {
+        backgroundImage:
+          "radial-gradient(circle at 50% 55%, #94a3b8 30%, transparent 32%)",
+      },
+      ".cm-highlightTab": {
+        opacity: "0.6",
       },
       ".cm-panels": {
         backgroundColor: "var(--c-bg-subtle, #09090b)",
@@ -147,6 +166,14 @@ function createEditor() {
 
   if (props.lineNumbers) {
     extensions.push(lineNumbersExtension());
+  }
+
+  if (props.codeFolding) {
+    extensions.push(codeFoldingExtension(), foldGutter());
+  }
+
+  if (props.highlightWhitespace) {
+    extensions.push(highlightWhitespaceExtension());
   }
 
   const isDark = document.documentElement.getAttribute("data-mode") === "dark";
@@ -195,6 +222,8 @@ onUnmounted(() => {
 watch(() => props.content, updateContent);
 watch(() => props.language, recreateEditor);
 watch(() => props.lineNumbers, recreateEditor);
+watch(() => props.codeFolding, recreateEditor);
+watch(() => props.highlightWhitespace, recreateEditor);
 </script>
 
 <template>

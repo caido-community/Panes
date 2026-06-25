@@ -8,6 +8,7 @@ import type {
   TransformationType,
   WorkflowInfo,
 } from "shared";
+import { isFoldableLanguage } from "shared";
 import { computed, onMounted, ref, watch } from "vue";
 
 import { useSDK } from "@/plugins/sdk";
@@ -32,6 +33,8 @@ const getDefaultFormData = (shellDefaults: ShellDefaults): PaneFormData => {
     codeBlock: false,
     language: "json",
     lineNumbers: false,
+    codeFolding: false,
+    highlightWhitespace: false,
     devMode: false,
   };
 };
@@ -135,6 +138,8 @@ export const useForm = () => {
       codeBlock: pane.codeBlock ?? false,
       language: pane.language ?? "json",
       lineNumbers: pane.lineNumbers ?? false,
+      codeFolding: pane.codeFolding ?? false,
+      highlightWhitespace: pane.highlightWhitespace ?? false,
       devMode: pane.devMode ?? false,
     };
     isCreating.value = false;
@@ -193,6 +198,13 @@ export const useForm = () => {
       codeBlock: data.codeBlock,
       language: data.codeBlock ? data.language : undefined,
       lineNumbers: data.codeBlock ? data.lineNumbers : undefined,
+      codeFolding:
+        data.codeBlock && data.lineNumbers && isFoldableLanguage(data.language)
+          ? data.codeFolding
+          : undefined,
+      highlightWhitespace: data.codeBlock
+        ? data.highlightWhitespace
+        : undefined,
       devMode: data.devMode,
     };
   };
