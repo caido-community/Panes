@@ -2,11 +2,16 @@
   "name": "frontend",
   "version": "0.0.0",
   "type": "module",
+  "browserslist": [
+    "last 2 Electron versions"
+  ],
   "scripts": {
     "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
     "@caido/primevue": "0.1.2",
+    "@codemirror/autocomplete": "6.20.0",
+    "@codemirror/commands": "6.10.4",
     "@codemirror/lang-css": "^6.2.1",
     "@codemirror/lang-html": "^6.4.6",
     "@codemirror/lang-javascript": "^6.2.2",

@@ -16,7 +16,7 @@ export type PaneLocation =
 
 export type PaneScope = "global" | "project";
 
-export type TransformationType = "workflow" | "command";
+export type TransformationType = "workflow" | "command" | "script";
 
 export type WorkflowTransformation = {
   type: "workflow";
@@ -31,6 +31,12 @@ export type CommandTransformation = {
   shellConfig?: string;
 };
 
+export type ScriptTransformation = {
+  type: "script";
+  script: string;
+  timeout?: number;
+};
+
 export type Pane = {
   id: string;
   name: string;
@@ -41,7 +47,10 @@ export type Pane = {
   input: PaneInput;
   httpql?: string;
   locations: PaneLocation[];
-  transformation: WorkflowTransformation | CommandTransformation;
+  transformation:
+    | WorkflowTransformation
+    | CommandTransformation
+    | ScriptTransformation;
   createdAt: number;
   updatedAt: number;
   templateId?: string;
@@ -69,6 +78,7 @@ export type PaneFormData = {
   transformationType: TransformationType;
   workflowId: string;
   command: string;
+  script: string;
   timeout: number;
   shell: string;
   shellConfig: string;
@@ -94,9 +104,20 @@ export type InputData = {
   input: string;
   paneId: string;
   paneName: string;
-  transformation:
-    | { type: "workflow"; workflowId: string }
-    | { type: "command"; command: string };
+};
+
+export type ScriptContext = {
+  input: string;
+  requestId: string;
+  host: string;
+  port: number;
+  path: string;
+  method: string;
+  url: string;
+  scheme: string;
+  query: string;
+  responseCode?: number;
+  responseLength?: number;
 };
 
 export function ok<T>(value: T): Result<T> {

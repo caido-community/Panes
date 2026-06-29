@@ -14,6 +14,25 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useSDK } from "@/plugins/sdk";
 import { usePanesStore } from "@/stores/panes";
 
+const buildTransformation = (
+  data: PaneFormData,
+  shellDefaults: ShellDefaults,
+): CreatePaneInput["transformation"] => {
+  if (data.transformationType === "workflow") {
+    return { type: "workflow", workflowId: data.workflowId };
+  }
+  if (data.transformationType === "script") {
+    return { type: "script", script: data.script, timeout: data.timeout };
+  }
+  return {
+    type: "command",
+    command: data.command,
+    timeout: data.timeout,
+    shell: data.shell.trim() || shellDefaults.shell,
+    shellConfig: data.shellConfig.trim() || undefined,
+  };
+};
+
 const getDefaultFormData = (shellDefaults: ShellDefaults): PaneFormData => {
   return {
     name: "",
@@ -27,6 +46,7 @@ const getDefaultFormData = (shellDefaults: ShellDefaults): PaneFormData => {
     transformationType: "workflow",
     workflowId: "",
     command: "",
+    script: "",
     timeout: 30,
     shell: shellDefaults.shell,
     shellConfig: shellDefaults.shellConfig,
@@ -123,8 +143,11 @@ export const useForm = () => {
         pane.transformation.type === "command"
           ? pane.transformation.command
           : "",
+      script:
+        pane.transformation.type === "script" ? pane.transformation.script : "",
       timeout:
-        pane.transformation.type === "command"
+        pane.transformation.type === "command" ||
+        pane.transformation.type === "script"
           ? (pane.transformation.timeout ?? 30)
           : 30,
       shell:
@@ -171,6 +194,8 @@ export const useForm = () => {
       return false;
     if (data.transformationType === "command" && data.command.trim() === "")
       return false;
+    if (data.transformationType === "script" && data.script.trim() === "")
+      return false;
     return true;
   });
 
@@ -185,16 +210,7 @@ export const useForm = () => {
       input: data.input,
       httpql: data.httpql.trim() || undefined,
       locations: data.locations,
-      transformation:
-        data.transformationType === "workflow"
-          ? { type: "workflow", workflowId: data.workflowId }
-          : {
-              type: "command",
-              command: data.command,
-              timeout: data.timeout,
-              shell: data.shell.trim() || shellDefaults.value.shell,
-              shellConfig: data.shellConfig.trim() || undefined,
-            },
+      transformation: buildTransformation(data, shellDefaults.value),
       codeBlock: data.codeBlock,
       language: data.codeBlock ? data.language : undefined,
       lineNumbers: data.codeBlock ? data.lineNumbers : undefined,
@@ -269,6 +285,7 @@ export const useForm = () => {
     [
       { label: "Workflow", value: "workflow" },
       { label: "Shell Command", value: "command" },
+      { label: "JavaScript", value: "script" },
     ];
 
   const scopeOptions: { label: string; value: PaneScope }[] = [

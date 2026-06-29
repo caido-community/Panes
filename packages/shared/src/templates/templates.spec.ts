@@ -90,6 +90,10 @@ describe("Templates", () => {
           expect(template.transformation.workflowId).toBeDefined();
           expect(typeof template.transformation.workflowId).toBe("string");
           expect(template.transformation.workflowId.length).toBeGreaterThan(0);
+        } else if (template.transformation.type === "script") {
+          expect(template.transformation.script).toBeDefined();
+          expect(typeof template.transformation.script).toBe("string");
+          expect(template.transformation.script.length).toBeGreaterThan(0);
         }
 
         if (template.codeBlock !== undefined) {

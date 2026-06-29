@@ -1,8 +1,9 @@
 import type { RequestFull, ResponseFull } from "@caido/sdk-frontend";
-import type { Pane } from "shared";
-import { isResponseInput } from "shared";
+import type { Pane, Result } from "shared";
+import { error, isResponseInput } from "shared";
 import { computed, onMounted, ref, toValue, watch } from "vue";
 
+import { runScript } from "@/services/script";
 import { usePanesStore } from "@/stores/panes";
 import type { FrontendSDK } from "@/types";
 
@@ -107,9 +108,48 @@ function extractResponseInput(
   }
 }
 
+async function runTransformation(
+  sdk: FrontendSDK,
+  pane: Pane,
+  input: string,
+  requestId: string,
+): Promise<Result<string>> {
+  const transformation = pane.transformation;
+  if (transformation.type === "command") {
+    return sdk.backend.runCommand(
+      transformation.command,
+      input,
+      transformation.timeout ?? 30,
+      requestId,
+      transformation.shell ?? "",
+      transformation.shellConfig ?? "",
+    );
+  }
+  if (transformation.type === "workflow") {
+    return sdk.backend.runWorkflow(transformation.workflowId, input);
+  }
+  return error("Unsupported transformation type");
+}
+
 export const useViewMode = (options: UseViewModeOptions) => {
   const store = usePanesStore();
   const state = ref<ViewModeState>({ type: "Loading" });
+
+  const finish = (
+    pane: Pane,
+    paneId: string,
+    requestId: string,
+    result: Result<string>,
+  ) => {
+    if (result.kind === "Error") {
+      devLog(pane, "Transformation failed", { error: result.error });
+      state.value = { type: "Failed", error: result.error };
+      return;
+    }
+    devLog(pane, `Transformation success (${result.value.length} bytes)`);
+    setCachedResult(paneId, requestId, result.value);
+    state.value = { type: "Success", output: result.value };
+  };
 
   const execute = async () => {
     state.value = { type: "Loading" };
@@ -128,185 +168,83 @@ export const useViewMode = (options: UseViewModeOptions) => {
 
     const sdk = toValue(options.sdk);
     const isResponseOnly = isResponseInput(pane.input);
+    const response = toValue(options.response);
+    const request = toValue(options.request);
+    const requestId = isResponseOnly ? response?.id : request?.id;
+
+    if (requestId === undefined) {
+      state.value = {
+        type: "Failed",
+        error: isResponseOnly
+          ? "Response not available."
+          : "Request not available.",
+      };
+      return;
+    }
+
+    const cached = getCachedResult(paneIdValue, requestId);
+    if (cached !== undefined) {
+      state.value = { type: "Success", output: cached };
+      return;
+    }
 
     devLog(pane, "Execution started", {
       input: pane.input,
       transformationType: pane.transformation.type,
     });
 
-    if (isResponseOnly) {
-      const response = toValue(options.response);
-      if (response === undefined) {
-        state.value = { type: "Failed", error: "Response not available." };
+    if (pane.transformation.type === "script") {
+      const contextResult = await sdk.backend.getScriptContext(
+        paneIdValue,
+        requestId,
+      );
+      if (contextResult.kind === "Error") {
+        state.value = { type: "Failed", error: contextResult.error };
         return;
       }
+      const result = await runScript(
+        contextResult.value,
+        pane.transformation.script,
+        (pane.transformation.timeout ?? 30) * 1000,
+      );
+      finish(pane, paneIdValue, requestId, result);
+      return;
+    }
 
-      const cachedOutput = getCachedResult(paneIdValue, response.id);
-      if (cachedOutput !== undefined) {
-        state.value = { type: "Success", output: cachedOutput };
-        return;
-      }
+    let input: string | undefined;
 
-      const input = extractResponseInput(
+    if (isResponseOnly && response !== undefined) {
+      input = extractResponseInput(
         response,
         pane.input as "response.body" | "response.headers" | "response.raw",
       );
-
-      devLog(pane, `Input extracted (${input.length} bytes)`);
-
       if (input === "") {
         state.value = { type: "Failed", error: "No response data available." };
         return;
       }
+    }
 
-      if (pane.transformation.type === "command") {
-        devLog(pane, "Command execution started", {
-          command: pane.transformation.command,
-        });
-        const commandResult = await sdk.backend.runCommand(
-          pane.transformation.command,
-          input,
-          pane.transformation.timeout ?? 30,
-          response.id,
-          pane.transformation.shell ?? "",
-          pane.transformation.shellConfig ?? "",
-        );
-
-        if (commandResult.kind === "Error") {
-          devLog(pane, "Command execution failed", {
-            error: commandResult.error,
-          });
-          state.value = { type: "Failed", error: commandResult.error };
-          return;
-        }
-
-        devLog(
-          pane,
-          `Command execution success (${commandResult.value.length} bytes output)`,
-        );
-
-        setCachedResult(paneIdValue, response.id, commandResult.value);
-        state.value = { type: "Success", output: commandResult.value };
+    if (!isResponseOnly) {
+      const inputResult = await sdk.backend.getPaneInputData(
+        paneIdValue,
+        requestId,
+      );
+      if (inputResult.kind === "Error") {
+        state.value = { type: "Failed", error: inputResult.error };
         return;
       }
-
-      devLog(pane, "Workflow execution started", {
-        workflowId: pane.transformation.workflowId,
-      });
-      const result = await sdk.backend.runWorkflow(
-        pane.transformation.workflowId,
-        input,
-      );
-
-      if (result.kind === "Error") {
-        devLog(pane, "Workflow execution failed", { error: result.error });
-        state.value = { type: "Failed", error: result.error };
-        return;
-      }
-
-      devLog(
-        pane,
-        `Workflow execution success (${result.value.length} bytes output)`,
-      );
-
-      setCachedResult(paneIdValue, response.id, result.value);
-      state.value = { type: "Success", output: result.value };
-      return;
+      input = inputResult.value.input;
     }
 
-    const request = toValue(options.request);
-    if (request === undefined) {
-      state.value = { type: "Failed", error: "Request not available." };
+    if (input === undefined) {
+      state.value = { type: "Failed", error: "No input data available." };
       return;
     }
-
-    const cachedOutput = getCachedResult(paneIdValue, request.id);
-    if (cachedOutput !== undefined) {
-      state.value = { type: "Success", output: cachedOutput };
-      return;
-    }
-
-    const result = await sdk.backend.getPaneInputData(paneIdValue, request.id);
-
-    if (result.kind === "Error") {
-      state.value = { type: "Failed", error: result.error };
-      return;
-    }
-
-    const { input, transformation } = result.value;
 
     devLog(pane, `Input extracted (${input.length} bytes)`);
 
-    if (transformation.type === "command") {
-      const paneForCommand = store.getPaneById(paneIdValue);
-      const timeout =
-        paneForCommand?.transformation.type === "command"
-          ? (paneForCommand.transformation.timeout ?? 30)
-          : 30;
-      const shell =
-        paneForCommand?.transformation.type === "command"
-          ? (paneForCommand.transformation.shell ?? "")
-          : "";
-      const shellConfig =
-        paneForCommand?.transformation.type === "command"
-          ? (paneForCommand.transformation.shellConfig ?? "")
-          : "";
-
-      devLog(pane, "Command execution started", {
-        command: transformation.command,
-      });
-
-      const commandResult = await sdk.backend.runCommand(
-        transformation.command,
-        input,
-        timeout,
-        request.id,
-        shell,
-        shellConfig,
-      );
-
-      if (commandResult.kind === "Error") {
-        devLog(pane, "Command execution failed", {
-          error: commandResult.error,
-        });
-        state.value = { type: "Failed", error: commandResult.error };
-        return;
-      }
-
-      devLog(
-        pane,
-        `Command execution success (${commandResult.value.length} bytes output)`,
-      );
-
-      setCachedResult(paneIdValue, request.id, commandResult.value);
-      state.value = { type: "Success", output: commandResult.value };
-      return;
-    }
-
-    devLog(pane, "Workflow execution started", {
-      workflowId: transformation.workflowId,
-    });
-
-    const workflowResult = await sdk.backend.runWorkflow(
-      transformation.workflowId,
-      input,
-    );
-
-    if (workflowResult.kind === "Error") {
-      devLog(pane, "Workflow execution failed", {
-        error: workflowResult.error,
-      });
-      state.value = { type: "Failed", error: workflowResult.error };
-      return;
-    }
-
-    devLog(
-      pane,
-      `Workflow execution success (${workflowResult.value.length} bytes output)`,
-    );
-
-    setCachedResult(paneIdValue, request.id, workflowResult.value);
-    state.value = { type: "Success", output: workflowResult.value };
+    const result = await runTransformation(sdk, pane, input, requestId);
+    finish(pane, paneIdValue, requestId, result);
   };
 
   onMounted(() => {

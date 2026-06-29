@@ -17,6 +17,8 @@ import type {
 import { isFoldableLanguage } from "shared";
 import { computed } from "vue";
 
+import ScriptEditor from "./ScriptEditor.vue";
+
 const form = defineModel<PaneFormData>({ required: true });
 
 const canFold = computed(
@@ -230,50 +232,50 @@ const languageOptions = [
             <div class="mt-2 p-2 bg-surface-800 rounded space-y-1">
               <div class="font-mono text-xs">
                 <div>
-                  <code v-pre class="text-primary-400">{{ input }}</code> - The
-                  extracted input data
+                  <code v-pre class="text-primary-400">{{ input }}</code
+                  >: The extracted input data
                 </div>
                 <div>
-                  <code v-pre class="text-primary-400">{{ requestId }}</code> -
-                  Request ID
+                  <code v-pre class="text-primary-400">{{ requestId }}</code
+                  >: Request ID
                 </div>
                 <div>
-                  <code v-pre class="text-primary-400">{{ host }}</code> -
-                  Request host
+                  <code v-pre class="text-primary-400">{{ host }}</code
+                  >: Request host
                 </div>
                 <div>
-                  <code v-pre class="text-primary-400">{{ port }}</code> -
-                  Request port
+                  <code v-pre class="text-primary-400">{{ port }}</code
+                  >: Request port
                 </div>
                 <div>
-                  <code v-pre class="text-primary-400">{{ path }}</code> -
-                  Request path
+                  <code v-pre class="text-primary-400">{{ path }}</code
+                  >: Request path
                 </div>
                 <div>
-                  <code v-pre class="text-primary-400">{{ method }}</code> -
-                  HTTP method
+                  <code v-pre class="text-primary-400">{{ method }}</code
+                  >: HTTP method
                 </div>
                 <div>
-                  <code v-pre class="text-primary-400">{{ url }}</code> - Full
-                  request URL
+                  <code v-pre class="text-primary-400">{{ url }}</code
+                  >: Full request URL
                 </div>
                 <div>
-                  <code v-pre class="text-primary-400">{{ scheme }}</code> - URL
-                  scheme (http/https)
+                  <code v-pre class="text-primary-400">{{ scheme }}</code
+                  >: URL scheme (http/https)
                 </div>
                 <div>
-                  <code v-pre class="text-primary-400">{{ query }}</code> -
-                  Query string
+                  <code v-pre class="text-primary-400">{{ query }}</code
+                  >: Query string
                 </div>
                 <div>
-                  <code v-pre class="text-primary-400">{{ responseCode }}</code>
-                  - Response status code (if available)
+                  <code v-pre class="text-primary-400">{{ responseCode }}</code
+                  >: Response status code (if available)
                 </div>
                 <div>
                   <code v-pre class="text-primary-400">{{
                     responseLength
-                  }}</code>
-                  - Response body length (if available)
+                  }}</code
+                  >: Response body length (if available)
                 </div>
               </div>
             </div>
@@ -316,6 +318,61 @@ const languageOptions = [
           Shell is auto-detected based on your OS. Defaults: Linux/macOS:
           /bin/bash, macOS: /bin/zsh, Windows: powershell.exe
         </p>
+      </div>
+
+      <div v-else-if="form.transformationType === 'script'" class="space-y-3">
+        <div class="space-y-2">
+          <label class="text-sm">Script *</label>
+          <ScriptEditor
+            :model-value="form.script"
+            @update:model-value="updateField('script', $event)"
+          />
+          <p class="text-xs text-surface-400">
+            JavaScript that returns the transformed string (async and
+            <code class="text-primary-400">await</code> are supported). Runs in
+            a background Web Worker with network access, so only use scripts you
+            trust.
+          </p>
+          <details class="text-xs">
+            <summary
+              class="text-surface-400 cursor-pointer hover:text-surface-300 mb-1"
+            >
+              Available variables
+            </summary>
+            <div class="mt-2 p-2 bg-surface-800 rounded font-mono space-y-1">
+              <div>
+                <code class="text-primary-400">input</code>: the extracted input
+                data (string)
+              </div>
+              <div>
+                <code class="text-primary-400">requestId</code>,
+                <code class="text-primary-400">host</code>,
+                <code class="text-primary-400">port</code>,
+                <code class="text-primary-400">path</code>,
+                <code class="text-primary-400">method</code>,
+                <code class="text-primary-400">url</code>,
+                <code class="text-primary-400">scheme</code>,
+                <code class="text-primary-400">query</code>
+              </div>
+              <div>
+                <code class="text-primary-400">responseCode</code>,
+                <code class="text-primary-400">responseLength</code> (available
+                when there is a response)
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-sm">Timeout (seconds)</label>
+          <InputNumber
+            :model-value="form.timeout"
+            :min="1"
+            :max="120"
+            class="w-32"
+            @update:model-value="updateField('timeout', $event ?? 30)"
+          />
+        </div>
       </div>
 
       <div v-else class="space-y-2">
