@@ -1,18 +1,19 @@
-import { defineConfig } from '@caido-community/dev';
-import vue from '@vitejs/plugin-vue';
+import path from "path";
+
+import tailwindCaido from "@caido/tailwindcss";
+import { defineConfig } from "@caido-community/dev";
+import vue from "@vitejs/plugin-vue";
+import prefixwrap from "postcss-prefixwrap";
 import tailwindcss from "tailwindcss";
 // @ts-expect-error no declared types at this time
 import tailwindPrimeui from "tailwindcss-primeui";
-import tailwindCaido from "@caido/tailwindcss";
-import path from "path";
-import prefixwrap from "postcss-prefixwrap";
 
 const id = "panes";
 export default defineConfig({
   id,
   name: "Panes",
   description: "Custom view modes for HTTP requests and responses",
-  version: "1.0.1",
+  version: "1.0.2",
   author: {
     name: "Caido Labs Inc.",
     email: "dev@caido.io",
@@ -25,21 +26,18 @@ export default defineConfig({
       root: "packages/backend",
     },
     {
-      kind: 'frontend',
+      kind: "frontend",
       id: "panes-frontend",
-      root: 'packages/frontend',
+      root: "packages/frontend",
       backend: {
         id: "panes-backend",
       },
       vite: {
         plugins: [vue()],
         build: {
-  rollupOptions: {
-            external: [
-              '@caido/frontend-sdk',
-              "vue",
-            ]
-          }
+          rollupOptions: {
+            external: ["@caido/frontend-sdk", "vue"],
+          },
         },
         resolve: {
           alias: [
@@ -61,25 +59,24 @@ export default defineConfig({
                   preflight: false,
                 },
                 content: [
-                  './packages/frontend/src/**/*.{vue,ts}',
-                  './node_modules/@caido/primevue/dist/primevue.mjs'
+                  "./packages/frontend/src/**/*.{vue,ts}",
+                  "./node_modules/@caido/primevue/dist/primevue.mjs",
                 ],
                 // Check the [data-mode="dark"] attribute on the <html> element to determine the mode
                 // This attribute is set in the Caido core application
                 darkMode: ["selector", '[data-mode="dark"]'],
                 plugins: [
-
                   // This plugin injects the necessary Tailwind classes for PrimeVue components
                   tailwindPrimeui,
 
                   // This plugin injects the necessary Tailwind classes for the Caido theme
                   tailwindCaido,
                 ],
-              })
-            ]
-          }
-        }
-      }
-    }
-  ]
+              }),
+            ],
+          },
+        },
+      },
+    },
+  ],
 });
