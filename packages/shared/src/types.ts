@@ -56,6 +56,9 @@ export type Pane = {
   templateId?: string;
   codeBlock?: boolean;
   language?: string;
+  lineNumbers?: boolean;
+  codeFolding?: boolean;
+  highlightWhitespace?: boolean;
   devMode?: boolean;
 };
 
@@ -81,6 +84,9 @@ export type PaneFormData = {
   shellConfig: string;
   codeBlock: boolean;
   language: string;
+  lineNumbers: boolean;
+  codeFolding: boolean;
+  highlightWhitespace: boolean;
   devMode: boolean;
 };
 
@@ -127,6 +133,15 @@ export function isResponseInput(input: PaneInput): boolean {
     input === "response.body" ||
     input === "response.headers" ||
     input === "response.raw"
+  );
+}
+
+export function isFoldableLanguage(language: string): boolean {
+  return (
+    language !== "bash" &&
+    language !== "shell" &&
+    language !== "sh" &&
+    language !== "text"
   );
 }
 

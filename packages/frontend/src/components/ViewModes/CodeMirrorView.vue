@@ -8,17 +8,36 @@ import { python } from "@codemirror/lang-python";
 import { sql } from "@codemirror/lang-sql";
 import { xml } from "@codemirror/lang-xml";
 import { yaml } from "@codemirror/lang-yaml";
+import {
+  codeFolding as codeFoldingExtension,
+  defaultHighlightStyle,
+  foldGutter,
+  StreamLanguage,
+  syntaxHighlighting,
+} from "@codemirror/language";
+import { http } from "@codemirror/legacy-modes/mode/http";
+import { shell } from "@codemirror/legacy-modes/mode/shell";
 import { highlightSelectionMatches, searchKeymap } from "@codemirror/search";
-import { EditorState } from "@codemirror/state";
+import { EditorState, type Extension } from "@codemirror/state";
 import { oneDark } from "@codemirror/theme-one-dark";
-import { EditorView, keymap } from "@codemirror/view";
+import {
+  EditorView,
+  highlightActiveLine,
+  highlightWhitespace as highlightWhitespaceExtension,
+  keymap,
+  lineNumbers as lineNumbersExtension,
+} from "@codemirror/view";
 import { onMounted, onUnmounted, ref, watch } from "vue";
 
+import { httpBodyFold, httpBodyHighlight } from "./http";
 import { SearchExt } from "./search";
 
 const props = defineProps<{
   content: string;
   language: string;
+  lineNumbers: boolean;
+  codeFolding: boolean;
+  highlightWhitespace: boolean;
 }>();
 
 const container = ref<HTMLElement | undefined>(undefined);
@@ -51,10 +70,12 @@ function getLanguageSupport(lang: string) {
     case "markdown":
     case "md":
       return markdown();
+    case "http":
+      return StreamLanguage.define(http);
     case "bash":
     case "shell":
     case "sh":
-      return javascript();
+      return StreamLanguage.define(shell);
     default:
       return null;
   }
@@ -64,12 +85,13 @@ function createEditor() {
   if (container.value === undefined) return;
 
   const languageSupport = getLanguageSupport(props.language);
-  const extensions = [
+  const extensions: Extension[] = [
     EditorState.readOnly.of(true),
     EditorView.lineWrapping,
     keymap.of(searchKeymap),
     ...SearchExt.create(),
     highlightSelectionMatches(),
+    highlightActiveLine(),
     EditorView.theme({
       "&": {
         height: "100%",
@@ -109,6 +131,23 @@ function createEditor() {
         wordBreak: "break-all",
         overflowWrap: "anywhere",
       },
+      ".cm-gutters": {
+        backgroundColor: "transparent",
+        border: "none",
+      },
+      ".cm-activeLine": {
+        backgroundColor: "rgba(0, 0, 0, 0.3) !important",
+      },
+      ".cm-activeLineGutter": {
+        backgroundColor: "rgba(0, 0, 0, 0.3) !important",
+      },
+      ".cm-highlightSpace": {
+        backgroundImage:
+          "radial-gradient(circle at 50% 55%, #94a3b8 30%, transparent 32%)",
+      },
+      ".cm-highlightTab": {
+        opacity: "0.6",
+      },
       ".cm-panels": {
         backgroundColor: "var(--c-bg-subtle, #09090b)",
         border: "none !important",
@@ -128,9 +167,31 @@ function createEditor() {
     extensions.push(languageSupport);
   }
 
+  if (props.lineNumbers) {
+    extensions.push(lineNumbersExtension());
+  }
+
+  if (props.codeFolding) {
+    extensions.push(codeFoldingExtension(), foldGutter());
+  }
+
+  if (props.highlightWhitespace) {
+    extensions.push(highlightWhitespaceExtension());
+  }
+
   const isDark = document.documentElement.getAttribute("data-mode") === "dark";
   if (isDark) {
     extensions.push(oneDark);
+  }
+  if (!isDark) {
+    extensions.push(syntaxHighlighting(defaultHighlightStyle));
+  }
+
+  if (props.language === "http") {
+    extensions.push(httpBodyHighlight(isDark));
+    if (props.codeFolding) {
+      extensions.push(httpBodyFold());
+    }
   }
 
   const state = EditorState.create({
@@ -155,7 +216,7 @@ function updateContent() {
   });
 }
 
-function updateLanguage() {
+function recreateEditor() {
   if (view === undefined || container.value === undefined) return;
   view.destroy();
   createEditor();
@@ -172,7 +233,10 @@ onUnmounted(() => {
 });
 
 watch(() => props.content, updateContent);
-watch(() => props.language, updateLanguage);
+watch(() => props.language, recreateEditor);
+watch(() => props.lineNumbers, recreateEditor);
+watch(() => props.codeFolding, recreateEditor);
+watch(() => props.highlightWhitespace, recreateEditor);
 </script>
 
 <template>

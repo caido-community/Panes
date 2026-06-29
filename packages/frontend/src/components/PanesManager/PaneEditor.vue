@@ -14,10 +14,16 @@ import type {
   PaneScope,
   TransformationType,
 } from "shared";
+import { isFoldableLanguage } from "shared";
+import { computed } from "vue";
 
 import ScriptEditor from "./ScriptEditor.vue";
 
 const form = defineModel<PaneFormData>({ required: true });
+
+const canFold = computed(
+  () => form.value.lineNumbers && isFoldableLanguage(form.value.language),
+);
 
 defineProps<{
   isCreating: boolean;
@@ -63,6 +69,7 @@ const isLocationSelected = (location: PaneLocation) => {
 };
 
 const languageOptions = [
+  { label: "HTTP", value: "http" },
   { label: "JSON", value: "json" },
   { label: "JavaScript", value: "javascript" },
   { label: "TypeScript", value: "typescript" },
@@ -418,6 +425,48 @@ const languageOptions = [
           placeholder="Select language"
           @update:model-value="updateField('language', $event)"
         />
+      </div>
+
+      <div v-if="form.codeBlock" class="flex items-center gap-2">
+        <Checkbox
+          :model-value="form.lineNumbers"
+          binary
+          @update:model-value="updateField('lineNumbers', $event)"
+        />
+        <label class="text-sm font-medium cursor-pointer">Line Numbers</label>
+      </div>
+
+      <div v-if="form.codeBlock" class="flex items-center gap-2">
+        <Checkbox
+          :model-value="form.codeFolding && canFold"
+          binary
+          :disabled="!canFold"
+          @update:model-value="updateField('codeFolding', $event)"
+        />
+        <label
+          class="text-sm font-medium cursor-pointer"
+          :class="{ 'text-surface-500': !canFold }"
+          >Code Folding</label
+        >
+        <span v-if="!form.lineNumbers" class="text-xs text-surface-400"
+          >Enable line numbers first</span
+        >
+        <span
+          v-else-if="!isFoldableLanguage(form.language)"
+          class="text-xs text-surface-400"
+          >Not available for this language</span
+        >
+      </div>
+
+      <div v-if="form.codeBlock" class="flex items-center gap-2">
+        <Checkbox
+          :model-value="form.highlightWhitespace"
+          binary
+          @update:model-value="updateField('highlightWhitespace', $event)"
+        />
+        <label class="text-sm font-medium cursor-pointer"
+          >Highlight Whitespace</label
+        >
       </div>
     </div>
 
