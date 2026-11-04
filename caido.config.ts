@@ -13,7 +13,7 @@ export default defineConfig({
   id,
   name: "Panes",
   description: "Custom view modes for HTTP requests and responses",
-  version: "1.0.3",
+  version: "1.0.4",
   author: {
     name: "Caido Labs Inc.",
     email: "dev@caido.io",
