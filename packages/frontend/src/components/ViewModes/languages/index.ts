@@ -1,0 +1,1 @@
+export { getLanguageSupport } from "./support";

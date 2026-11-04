@@ -134,8 +134,15 @@ async function runTransformation(
 export const useViewMode = (options: UseViewModeOptions) => {
   const store = usePanesStore();
   const state = ref<ViewModeState>({ type: "Loading" });
+  let latestRun = 0;
+
+  const setState = (run: number, next: ViewModeState) => {
+    if (run !== latestRun) return;
+    state.value = next;
+  };
 
   const finish = (
+    run: number,
     pane: Pane,
     paneId: string,
     requestId: string,
@@ -143,26 +150,28 @@ export const useViewMode = (options: UseViewModeOptions) => {
   ) => {
     if (result.kind === "Error") {
       devLog(pane, "Transformation failed", { error: result.error });
-      state.value = { type: "Failed", error: result.error };
+      setState(run, { type: "Failed", error: result.error });
       return;
     }
     devLog(pane, `Transformation success (${result.value.length} bytes)`);
     setCachedResult(paneId, requestId, result.value);
-    state.value = { type: "Success", output: result.value };
+    setState(run, { type: "Success", output: result.value });
   };
 
   const execute = async () => {
-    state.value = { type: "Loading" };
+    latestRun += 1;
+    const run = latestRun;
+    setState(run, { type: "Loading" });
 
     const paneIdValue = toValue(options.paneId);
     if (paneIdValue === undefined) {
-      state.value = { type: "Failed", error: "Pane ID not provided." };
+      setState(run, { type: "Failed", error: "Pane ID not provided." });
       return;
     }
 
     const pane = store.getPaneById(paneIdValue);
     if (pane === undefined) {
-      state.value = { type: "Failed", error: "Pane not found." };
+      setState(run, { type: "Failed", error: "Pane not found." });
       return;
     }
 
@@ -173,18 +182,18 @@ export const useViewMode = (options: UseViewModeOptions) => {
     const requestId = isResponseOnly ? response?.id : request?.id;
 
     if (requestId === undefined) {
-      state.value = {
+      setState(run, {
         type: "Failed",
         error: isResponseOnly
           ? "Response not available."
           : "Request not available.",
-      };
+      });
       return;
     }
 
     const cached = getCachedResult(paneIdValue, requestId);
     if (cached !== undefined) {
-      state.value = { type: "Success", output: cached };
+      setState(run, { type: "Success", output: cached });
       return;
     }
 
@@ -199,7 +208,7 @@ export const useViewMode = (options: UseViewModeOptions) => {
         requestId,
       );
       if (contextResult.kind === "Error") {
-        state.value = { type: "Failed", error: contextResult.error };
+        setState(run, { type: "Failed", error: contextResult.error });
         return;
       }
       const result = await runScript(
@@ -207,7 +216,7 @@ export const useViewMode = (options: UseViewModeOptions) => {
         pane.transformation.script,
         (pane.transformation.timeout ?? 30) * 1000,
       );
-      finish(pane, paneIdValue, requestId, result);
+      finish(run, pane, paneIdValue, requestId, result);
       return;
     }
 
@@ -219,7 +228,7 @@ export const useViewMode = (options: UseViewModeOptions) => {
         pane.input as "response.body" | "response.headers" | "response.raw",
       );
       if (input === "") {
-        state.value = { type: "Failed", error: "No response data available." };
+        setState(run, { type: "Failed", error: "No response data available." });
         return;
       }
     }
@@ -230,21 +239,21 @@ export const useViewMode = (options: UseViewModeOptions) => {
         requestId,
       );
       if (inputResult.kind === "Error") {
-        state.value = { type: "Failed", error: inputResult.error };
+        setState(run, { type: "Failed", error: inputResult.error });
         return;
       }
       input = inputResult.value.input;
     }
 
     if (input === undefined) {
-      state.value = { type: "Failed", error: "No input data available." };
+      setState(run, { type: "Failed", error: "No input data available." });
       return;
     }
 
     devLog(pane, `Input extracted (${input.length} bytes)`);
 
     const result = await runTransformation(sdk, pane, input, requestId);
-    finish(pane, paneIdValue, requestId, result);
+    finish(run, pane, paneIdValue, requestId, result);
   };
 
   onMounted(() => {
