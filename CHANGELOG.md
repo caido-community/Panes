@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Panes not updating when switching requests on Caido 0.59 [#24](https://github.com/caido-community/Panes/issues/24)
+- Previous request's output replacing the current one after switching quickly
 
 ## [1.0.3] - 2026-10-15
 
