@@ -48,12 +48,27 @@ jobs:
           VERSION=$(unzip -p plugin_package.zip manifest.json | jq -r .version)
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
+      - name: Extract release notes
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+          NOTES_FILE: ${{ runner.temp }}/release-notes.md
+        run: |
+          awk -v heading="## [${VERSION}]" '
+            /^## \[/ { found = index($0, heading) == 1; next }
+            /^\[[^]]+\]: / { next }
+            found { print }
+          ' CHANGELOG.md > "$NOTES_FILE"
+          if ! grep -q '[^[:space:]]' "$NOTES_FILE"; then
+            echo "CHANGELOG.md has no entry for ${VERSION}."
+            exit 1
+          fi
+
       - name: Create release
         uses: caido/action-release@v1
         with:
           tag: ${{ steps.meta.outputs.version }}
           commit: ${{ github.sha }}
-          body: 'Release ${{ steps.meta.outputs.version }}'
+          bodyFile: ${{ runner.temp }}/release-notes.md
           artifacts: 'dist/plugin_package.zip,dist/plugin_package.zip.sig'
           generateReleaseNotes: true
           immutableCreate: true
