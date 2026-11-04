@@ -32,12 +32,12 @@
     "pinia": "^2.1.7",
     "primevue": "4.1.0",
     "shared": "workspace:*",
-    "vue": "3.4.37"
+    "vue": "3.5.13"
   },
   "devDependencies": {
     "@caido/sdk-backend": "^0.53.1",
     "@caido/sdk-frontend": "0.54.2-beta.6",
     "backend": "workspace:*",
-    "vue-tsc": "2.0.29"
+    "vue-tsc": "2.2.12"
   }
 }
